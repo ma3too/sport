@@ -91,6 +91,22 @@
       background: #eaf1ff;
       color: #2A64AD;
     }
+    .zpet-button {
+      background-color: #ffffff;
+      color: #2A64AD;
+      font-weight: bold;
+      border: 2px solid #2A64AD;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0;
+      transition: all 0.2s;
+    }
+    .zpet-button:hover {
+      background-color: #2A64AD;
+      color: white;
+    }
     .action-buttons {
       display: flex;
       gap: 15px;
@@ -284,9 +300,10 @@
         <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj ID..." />
         <div id="zprava" class="status"></div>
         <div id="stavZamestnancu" class="stav-zamestnancu"></div>
+        <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
         <div class="action-buttons">
-          <button onclick="vymazatDochazku()">Vymazat docházku</button>
           <button onclick="exportovatDochazku()">Exportovat</button>
+          <button onclick="vymazatDochazku()">Vymazat docházku</button>
         </div>
       </div>
       <!-- PRAVÝ SLOUPEC -->
