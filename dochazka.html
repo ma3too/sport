@@ -2,134 +2,577 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Docházka - Google Sheets</title>
+  <title>Docházka</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body { background: #2A64AD; color: white; font-family: Arial, sans-serif; text-align: center; padding: 30px;}
-    input, select { font-size: 20px; padding: 8px; width: 250px; }
-    table { margin: 20px auto; border-collapse: collapse; background: #214175; }
-    th, td { padding: 8px 16px; border: 1px solid #fff;}
-    th { background: #183053; }
-    td { background: #3b7ddb; }
-    .success { color: #90ee90; font-weight: bold; }
-    .error { color: #ff9b7c; font-weight: bold; }
-    .status { font-size: 18px; margin: 15px 0 10px 0; }
+    body {
+      font-family: 'Open Sans', Arial, sans-serif;
+      background-color: #2A64AD;
+      color: white;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .center-wrap {
+      width: 100%;
+      max-width: none;        /* zrušili jsme 1500px limit */
+      margin: 0;              /* nebo margin: 40px auto; podle potřeby */
+      padding: 20px;          /* volitelně trochu odsazení od okrajů */
+      box-sizing: border-box;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 60px;
+      background: #2A64AD;    /* fialové pozadí */
+      border-radius: 32px;
+      padding: 38px 26px 32px 26px;
+      width: 100%;            /* přebírá šířku od .center-wrap */
+      box-sizing: border-box; /* aby šířka zahrnovala padding a border */
+      min-height: 470px;
+    }
+    .left-column {
+      min-width: 340px;
+      max-width: 440px;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 50px;
+      align-items: stretch;
+    }
+    .right-column {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 0;
+      min-height: 360px;
+    }
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 30px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 0px;
+      color: #fff;
+    }
+    label {
+      font-size: 17px;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    input[type="date"] {
+      background: #ffffff;
+      color: #000000;
+      border-radius: 10px;
+      padding: 7px 13px;
+      font-size: 18px;
+      margin-bottom: 10px;
+      text-align: center;
+      font-family: inherit;
+      width: 200px;
+    }
+    #barcode {
+      background: #fff;
+      color: #2A64AD;
+      border-radius: 12px;
+      font-size: 22px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      outline: none;
+      margin-bottom: 4px;
+      padding: 11px 12px;
+      font-family: inherit;
+    }
+    #barcode:focus {
+      outline: 2px solid #00000044;
+      background: #eaf1ff;
+      color: #2A64AD;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .action-buttons button {
+      background: #DB4B3E;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 8px 18px;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #19387033;
+      transition: background 0.18s, transform 0.14s;
+      margin-bottom: 4px;
+    }
+    .action-buttons button:hover {
+      background: #db4b3e;
+      color: #fff;
+      transform: scale(1.04);
+    }
+    .status {
+      display: block;
+      font-size: 15px;
+      margin: 4px 0 0 0;
+      padding: 5px 0;
+      border-radius: 14px;
+      font-weight: 500;
+      background: #0000003b;
+      min-width: 60px;
+      min-height: 30px;
+      text-align: center;
+      letter-spacing: .3px;
+      margin-bottom: 4px;
+    }
+    .success { background: #237b37; color: #e7ffe7; }
+    .error { background: #b53c2f; color: #ffe5dd; }
+    .stav-zamestnancu {
+      font-size: 16px;
+      margin-bottom: 4px;
+      color: #ffffff;
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+      color: #ffffff;
+      font-weight: 600;    
+    }
+    /* === Variant A: auto-fit, aby se buňky zalamovaly do dalšího řádku === */
+    .zamestnanci-grid {
+      display: grid;
+      /* Každá buňka minimálně 200px, a když se nevejde, zalomí se do dalšího řádku */
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 5px;
+      background: #2A64AD;    /* zelené pozadí gridu */
+      padding: 7px;
+      border-radius: 10px;
+      margin: 0 auto 8px auto;
+      width: 100%;
+      max-width: none;
+      box-sizing: border-box;
+    }
+    .zamestnanec-cell {
+      background: #ff4c4c;
+      color: #fff;
+      border-radius: 6px;
+      padding: 7px 4px;
+      font-size: 13px;
+      min-height: 24px;
+      text-align: center;
+      font-weight: 600;
+      box-shadow: 0 1px 3px #0001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      box-sizing: border-box;
+      /* minimální šířka buňky */
+      min-width: 200px;
+    }
+    .pritomen-cell {
+      background: #21b134 !important;
+      color: #002207 !important;
+      font-weight: bold;
+      border: 2px solid #155520;
+    }
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      justify-content: center;
+    }
+    .filter-btn {
+      padding: 7px 28px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border 0.18s;
+      border: 2px solid transparent;
+    }
+    .filter-btn.active {
+      background: #21b134;
+      border-color: #155520;
+    }
+    .filter-btn.inactive {
+      background: #b53c2f;
+      border-color: #7a1f1a;
+    }
+    .filter-btn:disabled {
+      opacity: 1;
+      cursor: default;
+    }
+    .export-table {
+      background: #fff;
+      color: #222;
+      border-radius: 14px;
+      margin: 25px auto 0 auto;
+      font-size: 16px;
+      width: 95%;
+      max-width: 920px;
+      border-collapse: collapse;
+      box-shadow: 0 2px 8px #19387033;
+      text-align: left;
+      overflow-x: auto;
+    }
+    .export-table th, .export-table td {
+      border: 1px solid #ccc;
+      padding: 9px 13px;
+    }
+    .export-table th {
+      background: #314b85;
+      color: #fff;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    .export-table tr:nth-child(even) td {
+      background: #f7f7f7;
+    }
+    .export-table tr:nth-child(odd) td {
+      background: #fff;
+    }
+    .export-table .pritomen-ano {
+      background: #c8ffc8 !important;
+      font-weight: bold;
+    }
+    .export-table .pritomen-ne {
+      background: #ffe3e3 !important;
+      color: #a22 !important;
+    }
+    @media (max-width: 1100px) {
+      .container { flex-direction: column; align-items: center; gap: 28px; }
+      .right-column, .left-column { width: 100%; max-width: 100vw; }
+      .zamestnanci-grid { gap: 8px; padding: 8px; }
+      .zamestnanec-cell {
+        font-size: 12px;
+        padding: 8px 4px;
+        min-width: 160px;
+        min-height: 32px;
+      }
+    }
+    @media (max-width: 650px) {
+      .center-wrap { padding: 0; }
+      h1 { font-size: 1.1rem; }
+      h2 { font-size: .97rem; }
+      .zamestnanci-grid { gap: 6px; padding: 6px; }
+      .zamestnanec-cell {
+        font-size: 10px;
+        padding: 6px 3px;
+        min-width: 120px;
+        min-height: 28px;
+      }
+      #barcode { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Docházka - Google Sheets</h1>
-  <div>
-    <label for="datum" style="margin-right:10px;">Datum: </label>
-    <input type="date" id="datum">
+  <div class="center-wrap">
+    <h1>Docházka</h1>
+    <div class="container">
+      <!-- LEVÝ SLOUPEC -->
+      <div class="left-column">
+        <div>
+          <label for="datum">Datum:</label>
+          <input type="date" id="datum">
+        </div>
+        <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj ID..." />
+        <div id="zprava" class="status"></div>
+        <div id="stavZamestnancu" class="stav-zamestnancu"></div>
+        <div class="action-buttons">
+          <button onclick="vymazatDochazku()">Vymazat docházku</button>
+          <button onclick="exportovatDochazku()">Exportovat</button>
+        </div>
+      </div>
+      <!-- PRAVÝ SLOUPEC -->
+      <div class="right-column">
+        <div class="filter-buttons">
+          <button id="btnA1" class="filter-btn">A1</button>
+          <button id="btnA2" class="filter-btn">A2</button>
+        </div>
+        <h2>Všichni zaměstnanci — <span id="countPr">přítomní: 0</span> / <span id="countAll">0</span></h2>
+        <div id="zamestnanciGrid" class="zamestnanci-grid"></div>
+      </div>
+    </div>
   </div>
-  <div style="margin: 30px 0 10px;">
-    <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj kód nebo zadej ID..." />
-    <div id="zprava" class="status"></div>
-  </div>
-  <h2>Přítomní zaměstnanci (pouze toto otevření stránky)</h2>
-  <table id="pritomni">
-    <tr><th>Jméno</th><th>Směna</th><th>Funkce</th><th>Kód</th><th>Čas příchodu</th></tr>
-  </table>
+
   <script>
-    const SCRIPT_URL = "https://corsproxy.io/?https://script.google.com/macros/s/AKfycbxmYbf1ltQP9z0024jRe3DBL4xmxdMaZWYoid6wswKe2vclbYaAARUuW53ouvRQyMUCzw/exec";
+    const btnA1 = document.getElementById("btnA1");
+    const btnA2 = document.getElementById("btnA2");
+
+    let filterA1 = true;
+    let filterA2 = true;
+
+    function parseCSV(csv) {
+      const sep = csv.includes(';') ? ';' : ',';
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(sep);
+      return lines.slice(1).map(line => {
+        const values = line.split(sep);
+        let obj = {};
+        headers.forEach((h, i) => { obj[h.trim()] = (values[i] || "").trim(); });
+        return obj;
+      });
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function ulozLocal(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+    }
+    function nacistLocal(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || '[]');
+      } catch {
+        return [];
+      }
+    }
 
     let zamestnanci = [];
-    let pritomni = new Map();
+    let pritomni = [];
     let vybraneDatum = "";
 
     const barcodeInput = document.getElementById("barcode");
     const zpravaDiv = document.getElementById("zprava");
-    const pritomniTable = document.getElementById("pritomni");
     const datumInput = document.getElementById("datum");
+    const stavZamestnancu = document.getElementById("stavZamestnancu");
+    const zamestnanciGrid = document.getElementById("zamestnanciGrid");
+    const countPr = document.getElementById("countPr");
+    const countAll = document.getElementById("countAll");
 
-    // --- Načtení zaměstnanců z Google Sheets ---
-    async function nactiZamestnance() {
+    async function nacistZamestnanceZeSouboru() {
+      const ulozeni = nacistLocal('zamestnanci');
+      if (Array.isArray(ulozeni) && ulozeni.length > 0) {
+        zamestnanci = ulozeni;
+        stavZamestnancu.textContent = "Seznam zaměstnanců načten z LocalStorage.";
+        zobrazZamestnance();
+        return;
+      }
+      stavZamestnancu.textContent = "Načítám seznam zaměstnanců…";
       try {
-        const res = await fetch(SCRIPT_URL);
-        zamestnanci = await res.json();
-        console.log("Zaměstnanci načteni:", zamestnanci);
-      } catch (e) {
-        zpravaDiv.textContent = "Nepodařilo se načíst seznam zaměstnanců!";
-        zpravaDiv.className = "error status";
-        console.error("Chyba při načítání zaměstnanců:", e);
+        const res = await fetch('zam.csv');
+        if (res.ok) {
+          const text = await res.text();
+          zamestnanci = parseCSV(text);
+          ulozLocal('zamestnanci', zamestnanci);
+          stavZamestnancu.textContent = "Seznam zaměstnanců načten ze souboru.";
+          zobrazZamestnance();
+        } else {
+          stavZamestnancu.textContent = "Soubor zam.csv nebyl nalezen!";
+        }
+      } catch {
+        stavZamestnancu.textContent = "Nepodařilo se načíst zam.csv!";
       }
     }
 
-    // --- Události ---
-    document.addEventListener("DOMContentLoaded", () => {
-      // Nastav dnešní datum jako výchozí
-      const dnes = new Date().toISOString().slice(0,10);
+    document.addEventListener("DOMContentLoaded", async () => {
+      const dnes = new Date().toISOString().slice(0, 10);
       datumInput.value = dnes;
       vybraneDatum = dnes;
-      nactiZamestnance();
+      pritomni = nacistLocal('pritomni_' + vybraneDatum);
+
+      const ulozSmeny = nacistLocal('aktivniSmeny');
+      if (Array.isArray(ulozSmeny) && ulozSmeny.length > 0) {
+        filterA1 = ulozSmeny.includes('A1');
+        filterA2 = ulozSmeny.includes('A2');
+      }
+      updateFilterButtons();
+
+      await nacistZamestnanceZeSouboru();
     });
 
     datumInput.addEventListener("change", function() {
       vybraneDatum = this.value;
-      pritomni.clear();
-      zobrazPritomne();
+      pritomni = nacistLocal('pritomni_' + vybraneDatum);
+      zobrazZamestnance();
       zpravaDiv.textContent = "";
     });
 
     barcodeInput.addEventListener("keydown", function(e) {
       if (e.key === "Enter") {
+        if (zamestnanci.length === 0) {
+          zpravaDiv.textContent = "Seznam zaměstnanců se načítá, počkejte prosím.";
+          zpravaDiv.className = "error status";
+          return;
+        }
         const kod = barcodeInput.value.trim();
+        if (!kod) {
+          zpravaDiv.textContent = "Nezadal/a jste kód!";
+          zpravaDiv.className = "error status";
+          return;
+        }
         const zam = zamestnanci.find(z => z.kod === kod);
         if (!zam) {
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
           zpravaDiv.className = "error status";
-        } else if (pritomni.has(kod)) {
+        } else if (pritomni.some(p => p.kod === kod)) {
           zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
           zpravaDiv.className = "error status";
         } else {
-          // Odeslání do Google Sheets
           const ted = new Date();
-          const casStr = ted.toLocaleTimeString();
-          fetch(SCRIPT_URL, {
-            method: "POST",
-            body: JSON.stringify({
-              datum: vybraneDatum,
-              smena: zam.smena,
-              kod: zam.kod,
-              jmeno: zam.jmeno,
-              funkce: zam.funkce,
-              cas_prichodu: casStr
-            }),
-            headers: { "Content-Type": "application/json" }
-          })
-          .then(resp => resp.text())
-          .then(respText => {
-            console.log("Odpověď serveru:", respText); // Ladicí výpis!
-            if (respText === "OK") {
-              pritomni.set(kod, {cas: casStr, zam});
-              zobrazPritomne();
-              zpravaDiv.textContent = zam.jmeno + " ("+zam.smena+", "+zam.funkce+") zapsán v " + casStr;
-              zpravaDiv.className = "success status";
-            } else {
-              zpravaDiv.textContent = "Chyba: " + respText;
-              zpravaDiv.className = "error status";
-            }
-          })
-          .catch(err => {
-            zpravaDiv.textContent = "Chyba komunikace se serverem!";
-            zpravaDiv.className = "error status";
-            console.error("Chyba komunikace:", err);
-          });
+          const casStr = formatTime(ted);
+          const zapis = {
+            os_cislo: zam.os_cislo,
+            jmeno: zam.jmeno,
+            pozice: zam.pozice,
+            smena: zam.smena,
+            prac_pomer: zam.prac_pomer,
+            kod: zam.kod,
+            cas_prichodu: casStr
+          };
+          pritomni.push(zapis);
+          ulozLocal('pritomni_' + vybraneDatum, pritomni);
+          zobrazZamestnance();
+          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}, ${zam.prac_pomer}) zapsán v ${casStr}`;
+          zpravaDiv.className = "success status";
         }
         barcodeInput.value = "";
       }
     });
 
-    // --- Zobrazení přítomných zaměstnanců v tabulce ---
-    function zobrazPritomne() {
-      pritomniTable.innerHTML = `<tr><th>Jméno</th><th>Směna</th><th>Funkce</th><th>Kód</th><th>Čas příchodu</th></tr>`;
-      Array.from(pritomni.values()).forEach(({cas, zam}) => {
-        const row = pritomniTable.insertRow(-1);
-        row.insertCell(0).textContent = zam.jmeno;
-        row.insertCell(1).textContent = zam.smena;
-        row.insertCell(2).textContent = zam.funkce;
-        row.insertCell(3).textContent = zam.kod;
-        row.insertCell(4).textContent = cas;
+    function updateFilterButtons() {
+      if (filterA1) {
+        btnA1.classList.add("active");
+        btnA1.classList.remove("inactive");
+      } else {
+        btnA1.classList.add("inactive");
+        btnA1.classList.remove("active");
+      }
+      btnA1.disabled = (filterA2 === false);
+
+      if (filterA2) {
+        btnA2.classList.add("active");
+        btnA2.classList.remove("inactive");
+      } else {
+        btnA2.classList.add("inactive");
+        btnA2.classList.remove("active");
+      }
+      btnA2.disabled = (filterA1 === false);
+
+      ulozLocal('aktivniSmeny', [
+        ...(filterA1 ? ['A1'] : []),
+        ...(filterA2 ? ['A2'] : [])
+      ]);
+    }
+
+    btnA1.addEventListener("click", function() {
+      if (filterA1 && filterA2) {
+        filterA1 = false;
+      } else if (!filterA1 && filterA2) {
+        filterA1 = true;
+      }
+      updateFilterButtons();
+      zobrazZamestnance();
+    });
+
+    btnA2.addEventListener("click", function() {
+      if (filterA1 && filterA2) {
+        filterA2 = false;
+      } else if (filterA1 && !filterA2) {
+        filterA2 = true;
+      }
+      updateFilterButtons();
+      zobrazZamestnance();
+    });
+
+    function zobrazZamestnance() {
+      if (zamestnanci.length === 0) {
+        zamestnanciGrid.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#fff;'>Seznam zaměstnanců je prázdný nebo se načítá.</div>";
+        countPr.textContent = `přítomní: 0`;
+        countAll.textContent = 0;
+        return;
+      }
+
+      const vybraneSmeny = [];
+      if (filterA1) vybraneSmeny.push('A1');
+      if (filterA2) vybraneSmeny.push('A2');
+
+      let zamList = zamestnanci
+        .filter(z => vybraneSmeny.includes(z.smena))
+        .sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'));
+
+      // Vytvoříme HTML pro každou buňku (bez pevného dělení na řádky)
+      let gridHTML = "";
+      let pocetPritomnych = 0;
+      zamList.forEach(zam => {
+        const pr = pritomni.find(p => p.kod === zam.kod);
+        if (pr) pocetPritomnych++;
+        gridHTML += `<div class="zamestnanec-cell${pr ? ' pritomen-cell' : ''}">
+          <div>${zam.jmeno}</div>
+          <div style="font-size:11px; opacity:0.8;">${zam.smena}</div>
+          <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer}</div>
+        </div>`;
       });
+
+      zamestnanciGrid.innerHTML = gridHTML;
+      countPr.textContent = `přítomní: ${pocetPritomnych}`;
+      countAll.textContent = zamList.length;
+    }
+
+    function vymazatDochazku() {
+      if (confirm("Opravdu chceš smazat docházku pro toto datum?")) {
+        pritomni = [];
+        ulozLocal('pritomni_' + vybraneDatum, pritomni);
+        zobrazZamestnance();
+        zpravaDiv.textContent = "Docházka vymazána!";
+        zpravaDiv.className = "success status";
+      }
+    }
+
+    function exportovatDochazku() {
+      const vybraneSmeny = [];
+      if (filterA1) vybraneSmeny.push('A1');
+      if (filterA2) vybraneSmeny.push('A2');
+
+      let exportList = zamestnanci
+        .filter(z => vybraneSmeny.includes(z.smena))
+        .sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'));
+
+      let exportData = exportList.map(zam => {
+        let pr = pritomni.find(p => p.kod === zam.kod);
+        return [
+          zam.os_cislo,
+          zam.jmeno,
+          zam.pozice,
+          zam.smena,
+          zam.prac_pomer,
+          zam.kod,
+          pr ? pr.cas_prichodu : "",
+          pr ? "ano" : "ne"
+        ];
+      });
+
+      let headers = [
+        "Os. číslo",
+        "Jméno",
+        "Pozice",
+        "Směna",
+        "Pracovní poměr",
+        "Kód",
+        "Čas příchodu",
+        "Přítomen"
+      ];
+
+      let csvContent =
+        headers.join(";") + "\n" +
+        exportData.map(row => row.map(val => `"${val}"`).join(";")).join("\n");
+
+      let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      let url = URL.createObjectURL(blob);
+      let a = document.createElement('a');
+      a.href = url;
+      a.download = "dochazka_" + vybraneDatum + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   </script>
 </body>
