@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rozdělení pracovníků na picking</title>
+  <style>
+    /* ===== Globální nastavení ===== */
+    body {
+      margin: 90px;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #2A64AD;   /* modré pozadí */
+      color: #000000;               /* tmavý text */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 700px;
+      width: 100%;
+      margin: 0 auto;      
+      background-color: #FFFFFF;   /* přidáno pozadí, aby bylo vidět zaoblení */
+      border-radius: 10px;         /* zaoblené rohy */
+      padding: 20px;               /* doporučeno, aby obsah nebyl nalepený na hraně */
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 10px;
+      color: #2A64AD;
+      font-size: 24px;
+    }
+
+    /* ===== Tabulka se zónami ===== */
+    .zones-table {
+      width: auto;                /* tabulka se smrští podle obsahu */
+      border-collapse: collapse;
+      table-layout: fixed;        /* pevné rozložení */
+      margin: 20px auto 0;        /* vycentrovaná tabulka */
+      background-color: #FFFFFF;  /* světlé pozadí tabulky */
+    }
+    .zones-table th,
+    .zones-table td {
+      border: none;               /* odstraněný vnitřní obrys buněk */
+      padding: 6px;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 14px;
+      background-color: #FFFFFF;
+    }
+    .zones-table td.zone-label {
+      width: 20px;                /* pevná šířka pro název zóny */
+      font-weight: bold;
+      background-color: #FFFFFF;
+      color: #000000;
+    }
+    .zones-table td.zone-result {
+      width: 20px;                /* pevná šířka pro počet pracovníků */
+      background-color: #FFFFFF;
+      font-weight: bold;
+      color: #DB4B3E;
+    }
+    .zones-table td.zone-input {
+      width: 80px;                /* vstupní sloupec */
+      background-color: #FFFFFF;
+    }
+    .zones-table input.zone-input-field {
+      width: 100%;
+      padding: 4px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      text-align: center;
+      color: #000;
+      background-color: #FFFFFF;
+    }
+
+    /* ===== Řádek s ovládacími prvky pod tabulkou ===== */
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 15px;
+      justify-content: center;
+      align-items: flex-end;
+      color: #FFFFFF;
+    }
+    .control-row .input-group {
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+    .control-row label {
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #000000;
+    }
+    .control-row input {
+      width: 120px;
+      padding: 6px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      text-align: center;
+      color: #000;
+      background-color: #FFFFFF;
+    }
+
+    /* ===== Tlačítka ===== */
+    button {
+      padding: 8px 25px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background-color: #DB4B3E;
+      color: #FFFFFF;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      transform: scale(1.03);
+      transition: all 0.2s ease;
+    }
+
+    /* ===== Souhrn na jeden řádek ===== */
+    .summary {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .summary p {
+      display: inline;
+      margin: 0 20px;
+      color: #2A64AD;           /* bílý text */
+    }
+    .summary .value {
+      color: #DB4B3E;           /* červená barva pro čísla */
+    }
+    .zpet-button {
+      background-color: #ffffff;
+      color: #2A64AD;
+      font-weight: bold;
+      border: 2px solid #2A64AD;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .zpet-button:hover {
+      background-color: #2A64AD;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Rozdělení picking</h1>
+
+    <!-- Tabulka se zónami (bez hlavičky, pouze tělo) -->
+    <table class="zones-table">
+      <tbody id="zones-table-body">
+        <!-- Řádek 1: A1, A2, A3, A4 -->
+        <tr>
+          <td class="zone-label">A1</td>
+          <td class="zone-result"><span id="res-A1">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-A1" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">A2</td>
+          <td class="zone-result"><span id="res-A2">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-A2" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">A3</td>
+          <td class="zone-result"><span id="res-A3">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-A3" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">A4</td>
+          <td class="zone-result"><span id="res-A4">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-A4" class="zone-input-field" placeholder="ks">
+          </td>
+        </tr>
+        <!-- Řádek 2: B1, B2, B3, B4 -->
+        <tr>
+          <td class="zone-label">B1</td>
+          <td class="zone-result"><span id="res-B1">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-B1" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">B2</td>
+          <td class="zone-result"><span id="res-B2">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-B2" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">B3</td>
+          <td class="zone-result"><span id="res-B3">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-B3" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">B4</td>
+          <td class="zone-result"><span id="res-B4">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-B4" class="zone-input-field" placeholder="ks">
+          </td>
+        </tr>
+        <!-- Řádek 3: C1, C2, C3, C4 -->
+        <tr>
+          <td class="zone-label">C1</td>
+          <td class="zone-result"><span id="res-C1">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-C1" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">C2</td>
+          <td class="zone-result"><span id="res-C2">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-C2" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">C3</td>
+          <td class="zone-result"><span id="res-C3">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-C3" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">C4</td>
+          <td class="zone-result"><span id="res-C4">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-C4" class="zone-input-field" placeholder="ks">
+          </td>
+        </tr>
+        <!-- Řádek 4: D1, D2, D3, D4 -->
+        <tr>
+          <td class="zone-label">D1</td>
+          <td class="zone-result"><span id="res-D1">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-D1" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">D2</td>
+          <td class="zone-result"><span id="res-D2">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-D2" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">D3</td>
+          <td class="zone-result"><span id="res-D3">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-D3" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">D4</td>
+          <td class="zone-result"><span id="res-D4">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-D4" class="zone-input-field" placeholder="ks">
+          </td>
+        </tr>
+        <!-- Řádek 5: E1, E2, E3, E4 -->
+        <tr>
+          <td class="zone-label">E1</td>
+          <td class="zone-result"><span id="res-E1">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-E1" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">E2</td>
+          <td class="zone-result"><span id="res-E2">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-E2" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">E3</td>
+          <td class="zone-result"><span id="res-E3">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-E3" class="zone-input-field" placeholder="ks">
+          </td>
+          <td class="zone-label">E4</td>
+          <td class="zone-result"><span id="res-E4">–</span></td>
+          <td class="zone-input">
+            <input type="number" min="0" id="zone-E4" class="zone-input-field" placeholder="ks">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Řádek s ovládacími prvky pod tabulkou -->
+    <div class="control-row">
+      <div class="input-group">
+        <label for="total-workers">Pracovníků:</label>
+        <input type="number" id="total-workers" min="1" placeholder="Např. 12" />
+      </div>
+      <div class="input-group">
+        <label for="norm">Norma (ks/hod):</label>
+        <input type="number" id="norm" min="1" value="78" placeholder="Např. 78" />
+      </div>
+      <button id="calc-btn" onclick="calculate()">Spočítat</button>
+      <button id="export-btn" onclick="exportData()">Export</button>
+    </div>
+
+    <!-- Souhrn: jeden řádek, čísla červeně, text bílý -->
+    <div class="summary">
+      <p>Celkový počet kusů: <span id="total-items" class="value">–</span></p>
+      <p>Celkový čas: <span id="time-required" class="value">–</span></p>
+    </div>
+  </div>
+  <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
+
+  <script>
+    const zones = [
+      'A1','A2','A3','A4',
+      'B1','B2','B3','B4',
+      'C1','C2','C3','C4',
+      'D1','D2','D3','D4',
+      'E1','E2','E3','E4'
+    ];
+
+    function calculate() {
+      const totalWorkers = parseInt(document.getElementById('total-workers').value);
+      const norm = parseInt(document.getElementById('norm').value);
+      if (!totalWorkers || totalWorkers <= 0 || !norm || norm <= 0) {
+        alert('Zadejte prosím kladný počet pracovníků a platnou normu.');
+        return;
+      }
+
+      const zoneData = [];
+      let totalItems = 0;
+      zones.forEach(zone => {
+        const count = parseInt(document.getElementById(`zone-${zone}`).value) || 0;
+        zoneData.push({ zone, items: count });
+        totalItems += count;
+      });
+
+      if (totalItems === 0) {
+        zones.forEach(z => {
+          document.getElementById(`res-${z}`).textContent = '0';
+        });
+        document.getElementById('total-items').textContent = '0';
+        document.getElementById('time-required').textContent = '0 hodin 0 minut';
+        return;
+      }
+
+      const nonZeroZones = zoneData
+        .filter(z => z.items > 0)
+        .sort((a, b) => b.items - a.items);
+      const nonZeroCount = nonZeroZones.length;
+
+      if (totalWorkers < nonZeroCount) {
+        zoneData.forEach(z => z.workers = 0);
+        for (let i = 0; i < totalWorkers; i++) {
+          nonZeroZones[i].workers = 1;
+        }
+      } else {
+        nonZeroZones.forEach(z => z.workers = 1);
+        let remainingWorkers = totalWorkers - nonZeroCount;
+        const totalItemsNonZero = nonZeroZones.reduce((sum, z) => sum + z.items, 0);
+
+        if (remainingWorkers > 0) {
+          nonZeroZones.forEach(z => {
+            const exactShare = (z.items / totalItemsNonZero) * remainingWorkers;
+            z.floorShare = Math.floor(exactShare);
+            z.remainderShare = exactShare - z.floorShare;
+          });
+
+          let sumFloor = 0;
+          nonZeroZones.forEach(z => {
+            z.workers += z.floorShare;
+            sumFloor += z.floorShare;
+          });
+
+          let leftover = remainingWorkers - sumFloor;
+
+          nonZeroZones
+            .sort((a, b) => b.remainderShare - a.remainderShare)
+            .forEach((z, idx) => {
+              if (idx < leftover) {
+                z.workers += 1;
+              }
+            });
+
+          nonZeroZones.sort((a, b) => zones.indexOf(a.zone) - zones.indexOf(b.zone));
+        }
+
+        zoneData.forEach(z => {
+          if (z.items === 0) {
+            z.workers = 0;
+          }
+        });
+      }
+
+      zoneData.forEach(z => {
+        document.getElementById(`res-${z.zone}`).textContent = z.workers;
+      });
+
+      const totalHoursExact = totalItems / (norm * totalWorkers);
+      const hours = Math.floor(totalHoursExact);
+      const minutes = Math.round((totalHoursExact - hours) * 60);
+
+      document.getElementById('total-items').textContent = totalItems;
+      document.getElementById('time-required').textContent = `${hours} hodin ${minutes} minut`;
+    }
+
+    function exportData() {
+      const lines = [];
+      for (let i = 0; i < zones.length; i += 2) {
+        const z1 = zones[i];
+        const z2 = zones[i + 1];
+        const w1 = document.getElementById(`res-${z1}`).textContent || '0';
+        const w2 = document.getElementById(`res-${z2}`).textContent || '0';
+        lines.push(`${z1} ${w1} ${z2} ${w2}`);
+      }
+
+      const content = lines.join('\r\n');
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'rozdeleni_pracovniku.txt');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>

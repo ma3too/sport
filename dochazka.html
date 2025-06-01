@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Docházka - Google Sheets</title>
+  <style>
+    body { background: #2A64AD; color: white; font-family: Arial, sans-serif; text-align: center; padding: 30px;}
+    input, select { font-size: 20px; padding: 8px; width: 250px; }
+    table { margin: 20px auto; border-collapse: collapse; background: #214175; }
+    th, td { padding: 8px 16px; border: 1px solid #fff;}
+    th { background: #183053; }
+    td { background: #3b7ddb; }
+    .success { color: #90ee90; font-weight: bold; }
+    .error { color: #ff9b7c; font-weight: bold; }
+    .status { font-size: 18px; margin: 15px 0 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>Docházka - Google Sheets</h1>
+  <div>
+    <label for="datum" style="margin-right:10px;">Datum: </label>
+    <input type="date" id="datum">
+  </div>
+  <div style="margin: 30px 0 10px;">
+    <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj kód nebo zadej ID..." />
+    <div id="zprava" class="status"></div>
+  </div>
+  <h2>Přítomní zaměstnanci (pouze toto otevření stránky)</h2>
+  <table id="pritomni">
+    <tr><th>Jméno</th><th>Směna</th><th>Funkce</th><th>Kód</th><th>Čas příchodu</th></tr>
+  </table>
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxmYbf1ltQP9z0024jRe3DBL4xmxdMaZWYoid6wswKe2vclbYaAARUuW53ouvRQyMUCzw/exec";
+
+    let zamestnanci = [];
+    let pritomni = new Map();
+    let vybraneDatum = "";
+
+    const barcodeInput = document.getElementById("barcode");
+    const zpravaDiv = document.getElementById("zprava");
+    const pritomniTable = document.getElementById("pritomni");
+    const datumInput = document.getElementById("datum");
+
+    // --- Načtení zaměstnanců z Google Sheets ---
+    async function nactiZamestnance() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        zamestnanci = await res.json();
+        console.log("Zaměstnanci načteni:", zamestnanci);
+      } catch (e) {
+        zpravaDiv.textContent = "Nepodařilo se načíst seznam zaměstnanců!";
+        zpravaDiv.className = "error status";
+        console.error("Chyba při načítání zaměstnanců:", e);
+      }
+    }
+
+    // --- Události ---
+    document.addEventListener("DOMContentLoaded", () => {
+      // Nastav dnešní datum jako výchozí
+      const dnes = new Date().toISOString().slice(0,10);
+      datumInput.value = dnes;
+      vybraneDatum = dnes;
+      nactiZamestnance();
+    });
+
+    datumInput.addEventListener("change", function() {
+      vybraneDatum = this.value;
+      pritomni.clear();
+      zobrazPritomne();
+      zpravaDiv.textContent = "";
+    });
+
+    barcodeInput.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        const kod = barcodeInput.value.trim();
+        const zam = zamestnanci.find(z => z.kod === kod);
+        if (!zam) {
+          zpravaDiv.textContent = "Zaměstnanec nenalezen!";
+          zpravaDiv.className = "error status";
+        } else if (pritomni.has(kod)) {
+          zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
+          zpravaDiv.className = "error status";
+        } else {
+          // Odeslání do Google Sheets
+          const ted = new Date();
+          const casStr = ted.toLocaleTimeString();
+          fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              datum: vybraneDatum,
+              smena: zam.smena,
+              kod: zam.kod,
+              jmeno: zam.jmeno,
+              funkce: zam.funkce,
+              cas_prichodu: casStr
+            }),
+            headers: { "Content-Type": "application/json" }
+          })
+          .then(resp => resp.text())
+          .then(respText => {
+            console.log("Odpověď serveru:", respText); // Ladicí výpis!
+            if (respText === "OK") {
+              pritomni.set(kod, {cas: casStr, zam});
+              zobrazPritomne();
+              zpravaDiv.textContent = zam.jmeno + " ("+zam.smena+", "+zam.funkce+") zapsán v " + casStr;
+              zpravaDiv.className = "success status";
+            } else {
+              zpravaDiv.textContent = "Chyba: " + respText;
+              zpravaDiv.className = "error status";
+            }
+          })
+          .catch(err => {
+            zpravaDiv.textContent = "Chyba komunikace se serverem!";
+            zpravaDiv.className = "error status";
+            console.error("Chyba komunikace:", err);
+          });
+        }
+        barcodeInput.value = "";
+      }
+    });
+
+    // --- Zobrazení přítomných zaměstnanců v tabulce ---
+    function zobrazPritomne() {
+      pritomniTable.innerHTML = `<tr><th>Jméno</th><th>Směna</th><th>Funkce</th><th>Kód</th><th>Čas příchodu</th></tr>`;
+      Array.from(pritomni.values()).forEach(({cas, zam}) => {
+        const row = pritomniTable.insertRow(-1);
+        row.insertCell(0).textContent = zam.jmeno;
+        row.insertCell(1).textContent = zam.smena;
+        row.insertCell(2).textContent = zam.funkce;
+        row.insertCell(3).textContent = zam.kod;
+        row.insertCell(4).textContent = cas;
+      });
+    }
+  </script>
+</body>
+</html>

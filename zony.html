@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Zóny a Tisk</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background-color: #2A64AD;
+      color: white;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .center-wrap {
+      max-width: 950px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 350px;
+    }
+    .left-column, .right-column {
+      width: 400px;
+      min-width: 340px;
+      max-width: 440px;
+      box-sizing: border-box;
+    }
+    .left-column {
+      margin-top: 75px;
+    }
+    .right-column {
+      margin-top: 45px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      max-width: 100%;
+      margin: auto;
+    }
+
+    .buttons-section {
+      margin-bottom: 33px;
+    }
+
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      color: white;
+    }
+    button:hover {
+      transform: scale(1.03);
+      transition: all 0.2s ease;
+    }
+    .left-column .button-grid button {
+      width: 120px;
+      min-width: 120px;
+      max-width: 120px;
+      box-sizing: border-box;
+    }
+
+    .A { background-color: #ffa861; color: #000000; }
+    .B { background-color: #47e0ff; color: #000000; }
+    .C { background-color: #ff786c; color: #000000; }
+    .D { background-color: #46e36b; color: black; }
+    .E { background-color: #ff8eb4; color: black; }
+    .BUF { background-color: #ffe75f; color: black; }
+    .special { background-color: #d0d0d0; color: black; }
+
+    svg {
+      display: block;
+      margin: 30px auto 5px;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .action-buttons {
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .action-buttons button {
+      background-color: #222222;
+      color: white;
+      padding: 10px 14px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Upravujeme mezeru mezi SVG a inputem */
+    #printAreaPrinter {
+      margin-bottom: 0;
+    }
+    svg#barcodePrinter {
+      margin-bottom: 2px;
+    }
+    .input-row {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 6px 0 0 0;
+    }
+    .input-row input {
+      width: 100px;
+      padding: 8px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+    }
+    .input-row button {
+      width: 140px;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      box-sizing: border-box;
+      background-color: #DB4B3E;
+      color: white;
+      cursor: pointer;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+    @media (max-width: 950px) {
+      .container {
+        flex-direction: column;
+        gap: 24px;
+        align-items: center;
+      }
+      .left-column, .right-column {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .left-column .button-grid button {
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
+    }
+    .zpet-button {
+      background-color: #ffffff;
+      color: #2A64AD;
+      font-weight: bold;
+      border: 2px solid #2A64AD;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .zpet-button:hover {
+      background-color: #2A64AD;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="center-wrap">
+  <div class="container">
+    <!-- LEVÝ SLOUPEC -->
+    <div class="left-column">
+      <div class="buttons-section">
+        <div class="button-grid" id="mainButtons"></div>
+      </div>
+      <div class="buttons-section">
+        <div class="button-grid" id="bufButtons"></div>
+      </div>
+      <div class="buttons-section">
+        <div class="button-grid">
+          <button class="special" onclick="generateBarcode('MDT PTO')">PTO</button>
+          <button class="special" onclick="generateBarcode('AMEISE WA_FLOOR')">OVERSIZE</button>
+          <button class="special" onclick="generateBarcode('AMEISE WAO_FLOOR')">EXTRA OVERSIZE</button>
+          <button class="special" onclick="generateBarcode('AMEISE WA_EXT_HEAVY_FLOOR')">HEAVY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRAVÝ SLOUPEC -->
+    <div class="right-column">
+      <!-- Čárový kód ZÓN nahoře -->
+      <div id="printArea">
+        <svg id="barcode"></svg>
+      </div>
+
+      <div class="action-buttons">
+        <button onclick="downloadSVG('barcode')">⬇️ Stáhnout</button>
+        <button onclick="printSpecific('printArea')">🖨️ Tisk</button>
+      </div>
+      
+      <!-- SVG PRO TISKÁRNU -->
+      <div id="printAreaPrinter">
+        <svg id="barcodePrinter"></svg>
+      </div>
+      <!-- INPUT a TLAČÍTKO těsně POD SVG tiskárny -->
+      <div class="input-row">
+        <input type="number" id="printerNumber" placeholder="č. tiskárny">
+        <button onclick="generatePrinter()">Vygenerovat</button>
+      </div>
+
+      <div class="action-buttons">
+        <button onclick="downloadSVG('barcodePrinter')">⬇️ Stáhnout</button>
+        <button onclick="printSpecific('printAreaPrinter')">🖨️ Tisk</button>
+      </div>
+      <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+  const mainContainer = document.getElementById("mainButtons");
+  const bufContainer = document.getElementById("bufButtons");
+  const sekce = ['A', 'B', 'C', 'D', 'E'];
+
+  sekce.forEach(s => {
+    for (let i = 1; i <= 4; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = `${s}${i}`;
+      btn.className = s;
+      btn.onclick = () => generateBarcode(`MDT PT${s}0${i}`);
+      mainContainer.appendChild(btn);
+    }
+  });
+
+  sekce.forEach(s => {
+    for (let i = 1; i <= 4; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = `${s}${i}`;
+      btn.className = "BUF";
+      btn.onclick = () => generateBarcode(`MDT PT${s}0${i}_BUF`);
+      bufContainer.appendChild(btn);
+    }
+  });
+
+  function generateBarcode(value) {
+    JsBarcode("#barcode", value, {
+      format: "CODE128",
+      width: 2,
+      height: 100,
+      displayValue: true,
+      lineColor: "#000",
+      background: "#fff"
+    });
+  }
+
+  function generatePrinter() {
+    const number = document.getElementById("printerNumber").value.trim();
+    if (number) {
+      JsBarcode("#barcodePrinter", `DIST_8.${number}`, {
+        format: "CODE128",
+        width: 2,
+        height: 100,
+        displayValue: true,
+        lineColor: "#000",
+        background: "#fff"
+      });
+    } else {
+      alert("Zadejte číslo tiskárny.");
+    }
+  }
+
+  function downloadSVG(id) {
+    const svg = document.getElementById(id);
+    const serializer = new XMLSerializer();
+    const source = serializer.serializeToString(svg);
+    const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = id + ".svg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function printSpecific(id) {
+    const printContents = document.getElementById(id).innerHTML;
+    const win = window.open('', '', 'width=600,height=400');
+    win.document.write('<html><head><title>Tisk</title></head><body>');
+    win.document.write(printContents);
+    win.document.write('</body></html>');
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
+  }
+</script>
+
+</body>
+</html>
