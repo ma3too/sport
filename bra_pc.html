@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>WaitBRA (PC verze)</title>
+  <style>
+    body { background: #2A64AD; color: white; font-family: 'Open Sans', sans-serif; padding: 30px; }
+    h1 { margin-top: 0; }
+    .panel { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+    .uploader label { font-weight: normal; }
+    #barcodeInput {
+      font-size: 22px;
+      padding: 10px 12px;
+      border: 2px solid #ff3232;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      margin-right: 15px;
+      width: 270px;
+      background: #fff;
+      color: #2A64AD;
+      font-weight: bold;
+      outline: none;
+      transition: border 0.2s;
+    }
+    #barcodeInput:focus { border: 2px solid #21b93e; }
+    .blink { animation: blink 0.25s alternate 3; }
+    @keyframes blink { 100% { background: #e0ffe6; } }
+    table { border-collapse: collapse; width: 100%; background: white; color: #222; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    .scanned { background: #21b93e; color: white; font-weight: bold; }
+    #alert { font-size: 20px; color: #21b93e; margin: 20px 0 10px 0; font-weight: bold; display: none; }
+    #stats { margin: 20px 0 18px 0; font-size: 18px; font-weight: bold; }
+    .statlabel { color: #ff3232; font-size: 18px; font-weight: bold; }
+    .statnum { color: #fff; font-size: 22px; font-weight: bold; }
+    #exportBtn {
+      background: #ffd700;
+      color: #2A64AD;
+      font-weight: bold;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #exportBtn:hover { background: #ffc300; }
+    @media (max-width: 700px) {
+      .panel { flex-direction: column; align-items: flex-start; gap: 8px;}
+      #barcodeInput { width: 100%; }
+      table { font-size: 13px; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+  <h1>WaitBRA (PC verze)</h1>
+  <div class="panel">
+    <div class="uploader">
+      <label>Nahrát CSV seznam 👉 <input type="file" id="csvFile" accept=".csv"></label>
+    </div>
+    <button id="exportBtn" style="display:none;">Exportovat nenalezené krabice</button>
+    <input id="barcodeInput" type="text" placeholder="Pípni kód…" autocomplete="off" style="display:none;" />
+  </div>
+  <div id="stats"></div>
+  <div id="alert"></div>
+  <table id="codeTable">
+    <thead>
+      <tr><th>Pořadí</th><th>Kód krabice</th><th>Zóna</th><th>Status</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <script>
+    let codes = [];
+    let scanned = new Set();
+    const STORAGE_KEY = "waitbra-pc-v1";
+
+    // Načíst uložená data z localStorage při načtení stránky
+    window.addEventListener('DOMContentLoaded', function() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const data = JSON.parse(stored);
+          if (Array.isArray(data.codes) && Array.isArray(data.scanned)) {
+            codes = data.codes;
+            scanned = new Set(data.scanned);
+            renderTable();
+            updateStats();
+            document.getElementById('exportBtn').style.display = codes.length > 0 ? "inline-block" : "none";
+            showBarcodeInput();
+          }
+        } catch (e) {}
+      }
+    });
+
+    document.getElementById('csvFile').addEventListener('change', function(e) {
+      Papa.parse(e.target.files[0], {
+        delimiter: ";",
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          codes = results.data
+            .filter(row => row.krabice && row.zona)
+            .map(row => ({
+              code: row.krabice.trim(),
+              zone: row.zona.trim()
+            }));
+          scanned.clear();
+          saveToStorage();
+          renderTable();
+          updateStats();
+          document.getElementById('exportBtn').style.display = codes.length > 0 ? "inline-block" : "none";
+          showBarcodeInput();
+        }
+      });
+    });
+
+    function showBarcodeInput() {
+      const input = document.getElementById('barcodeInput');
+      if (codes.length) {
+        input.style.display = "inline-block";
+        setTimeout(() => input.focus(), 100);
+      } else {
+        input.style.display = "none";
+      }
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        codes: codes,
+        scanned: Array.from(scanned)
+      }));
+    }
+
+    function renderTable() {
+      const tbody = document.querySelector('#codeTable tbody');
+      tbody.innerHTML = '';
+      codes.forEach((row, i) => {
+        let status = scanned.has(row.code) ? '✅ Oskenováno' : '';
+        let tr = `<tr class="${scanned.has(row.code) ? 'scanned' : ''}">
+          <td>${i + 1}</td>
+          <td>${row.code}</td>
+          <td>${row.zone}</td>
+          <td>${status}</td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', tr);
+      });
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = codes.length;
+      const done = scanned.size;
+      const left = total - done;
+      document.getElementById('stats').innerHTML =
+        `<span class="statlabel">Celkem krabic:</span> <span class="statnum">${total}</span> &nbsp; | &nbsp; ` +
+        `<span class="statlabel">Oskenováno:</span> <span class="statnum">${done}</span> &nbsp; | &nbsp; ` +
+        `<span class="statlabel">Zbývá:</span> <span class="statnum">${left}</span>`;
+    }
+
+    function showAlert(msg) {
+      const el = document.getElementById('alert');
+      el.textContent = msg;
+      el.style.display = 'block';
+      setTimeout(() => { el.style.display = 'none'; }, 2000);
+    }
+
+    // Hlavní část pro "skenování" z čtečky
+    document.getElementById('barcodeInput').addEventListener('change', onInputScan);
+    document.getElementById('barcodeInput').addEventListener('input', function(e) {
+      if (e.target.value.includes('\n') || e.target.value.includes('\r')) onInputScan(e);
+    });
+
+    function onInputScan(e) {
+      const val = e.target.value.trim();
+      e.target.value = "";
+      if (!val) return;
+      const found = codes.find(row => row.code === val);
+      if (found && !scanned.has(found.code)) {
+        scanned.add(found.code);
+        saveToStorage();
+        showAlert("✅ Krabice " + found.code + " (zóna " + found.zone + ") nalezena!");
+        blinkInput();
+        renderTable();
+      }
+      // Kódy mimo seznam ignorovat
+    }
+
+    function blinkInput() {
+      const input = document.getElementById('barcodeInput');
+      input.classList.remove('blink');
+      void input.offsetWidth; // "restart" animace
+      input.classList.add('blink');
+    }
+
+    // Export nenalezených krabic do CSV
+    document.getElementById('exportBtn').addEventListener('click', function() {
+      const notScanned = codes.filter(row => !scanned.has(row.code));
+      if (notScanned.length === 0) {
+        alert("Všechny krabice byly oskenovány!");
+        return;
+      }
+      let csvContent = "krabice;zona\r\n" + 
+        notScanned.map(row => `${row.code};${row.zone}`).join("\r\n");
+      let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      let link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "nenalezeno.csv";
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+
+    // Udržuj focus na poli (proti ztrátě focusu kliknutím, tabulátorem apod.)
+    document.addEventListener('click', function() {
+      const input = document.getElementById('barcodeInput');
+      if (input && input.style.display !== "none") input.focus();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      // Stisknutí ESC smaže pole
+      if (e.key === "Escape") {
+        const input = document.getElementById('barcodeInput');
+        if (input && input.style.display !== "none") input.value = "";
+      }
+    });
+  </script>
+</body>
+</html>
