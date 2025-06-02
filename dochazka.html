@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: 'Open Sans', Arial, sans-serif;
-      background-color: #2A64AD;
+      background-color: #0066b3;
       color: white;
       margin: 0;
       padding: 0;
@@ -15,9 +15,9 @@
     }
     .center-wrap {
       width: 100%;
-      max-width: none;        /* zrušili jsme 1500px limit */
-      margin: 0;              /* nebo margin: 40px auto; podle potřeby */
-      padding: 20px;          /* volitelně trochu odsazení od okrajů */
+      max-width: none;
+      margin: 0;
+      padding: 20px;
       box-sizing: border-box;
     }
     .container {
@@ -25,11 +25,11 @@
       justify-content: center;
       align-items: flex-start;
       gap: 60px;
-      background: #2A64AD;    /* fialové pozadí */
+      background: #0066b3;
       border-radius: 32px;
       padding: 38px 26px 32px 26px;
-      width: 100%;            /* přebírá šířku od .center-wrap */
-      box-sizing: border-box; /* aby šířka zahrnovala padding a border */
+      width: 100%;
+      box-sizing: border-box;
       min-height: 470px;
     }
     .left-column {
@@ -40,8 +40,17 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
-      margin-top: 50px;
+      margin-top: 67px;
       align-items: stretch;
+    }
+    .logo-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .logo {
+      max-width: 100%;
+      height: auto;
+      max-height: 120px;
     }
     .right-column {
       width: 100%;
@@ -54,7 +63,7 @@
       margin-bottom: 30px;
       font-weight: bold;
       text-align: center;
-      letter-spacing: 0px;
+      letter-spacing: 0;
       color: #fff;
     }
     label {
@@ -71,65 +80,86 @@
       margin-bottom: 10px;
       text-align: center;
       font-family: inherit;
-      width: 200px;
+      width: 150px;
     }
     #barcode {
       background: #fff;
-      color: #2A64AD;
+      color: #0066b3;
       border-radius: 12px;
       font-size: 22px;
       width: 100%;
-      max-width: 400px;
-      text-align: center;
+      max-width: 410px;
+      text-align: left;
       outline: none;
       margin-bottom: 4px;
       padding: 11px 12px;
       font-family: inherit;
     }
     #barcode:focus {
-      outline: 2px solid #00000044;
+      outline: 2px solid #000000;
       background: #eaf1ff;
-      color: #2A64AD;
+      color: #0066b3;
     }
-    .zpet-button {
-      background-color: #ffffff;
-      color: #2A64AD;
-      font-weight: bold;
-      border: 2px solid #2A64AD;
-      border-radius: 10px;
-      padding: 8px 16px;
-      font-size: 16px;
-      cursor: pointer;
-      margin: 0;
-      transition: all 0.2s;
-    }
-    .zpet-button:hover {
-      background-color: #2A64AD;
-      color: white;
-    }
+
+    /* --- Nové styly pro tlačítka v jednom řádku --- */
     .action-buttons {
       display: flex;
       gap: 15px;
       margin-top: 4px;
       flex-wrap: wrap;
     }
-    .action-buttons button {
-      background: #DB4B3E;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 8px 18px;
-      font-size: 18px;
+    /* Tlačítko Zpět (bílé/modré) */
+    .zpet-button {
+      background-color: #ffffff;
+      color: #0066b3;
+      font-weight: bold;
+      border: 2px solid #0066b3;
+      border-radius: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 2px 8px #19387033;
-      transition: background 0.18s, transform 0.14s;
-      margin-bottom: 4px;
+      transition: all 0.2s;
     }
-    .action-buttons button:hover {
-      background: #db4b3e;
-      color: #fff;
+    .zpet-button:hover {
+      background-color: #0066b3;
+      color: white;
+    }
+
+    /* Tlačítko Exportovat (zelené) */
+    .export-button {
+      background-color: #1eec4e;
+      color: #155520;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
+      transition: background 0.18s, transform 0.14s;
+    }
+    .export-button:hover {
+      background-color: #54ff79;
       transform: scale(1.04);
     }
+
+    /* Tlačítko Vymazat docházku (červené) */
+    .delete-button {
+      background-color: #ee3b33;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
+      transition: background 0.18s, transform 0.14s;
+    }
+    .delete-button:hover {
+      background-color: #c82333;
+      transform: scale(1.04);
+    }
+    /* ---------------------------------------------- */
+
     .status {
       display: block;
       font-size: 15px;
@@ -158,13 +188,11 @@
       color: #ffffff;
       font-weight: 600;    
     }
-    /* === Variant A: auto-fit, aby se buňky zalamovaly do dalšího řádku === */
     .zamestnanci-grid {
       display: grid;
-      /* Každá buňka minimálně 200px, a když se nevejde, zalomí se do dalšího řádku */
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 5px;
-      background: #2A64AD;    /* zelené pozadí gridu */
+      background: #2A64AD;
       padding: 7px;
       border-radius: 10px;
       margin: 0 auto 8px auto;
@@ -187,11 +215,10 @@
       justify-content: center;
       flex-direction: column;
       box-sizing: border-box;
-      /* minimální šířka buňky */
       min-width: 200px;
     }
     .pritomen-cell {
-      background: #21b134 !important;
+      background: #1eec4e !important;
       color: #002207 !important;
       font-weight: bold;
       border: 2px solid #155520;
@@ -205,7 +232,7 @@
     .filter-btn {
       padding: 7px 28px;
       border-radius: 8px;
-      color: #fff;
+      color: #155520;
       font-weight: 700;
       font-size: 1rem;
       cursor: pointer;
@@ -213,7 +240,7 @@
       border: 2px solid transparent;
     }
     .filter-btn.active {
-      background: #21b134;
+      background: #1eec4e;
       border-color: #155520;
     }
     .filter-btn.inactive {
@@ -233,7 +260,7 @@
       width: 95%;
       max-width: 920px;
       border-collapse: collapse;
-      box-shadow: 0 2px 8px #19387033;
+      box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
       text-align: left;
       overflow-x: auto;
     }
@@ -294,16 +321,22 @@
       <!-- LEVÝ SLOUPEC -->
       <div class="left-column">
         <div>
+          <!-- Logo -->
+          <div class="logo-container">
+          <img src="logo.png" alt="Logo firmy" class="logo">
+        </div>
           <label for="datum">Datum:</label>
           <input type="date" id="datum">
         </div>
         <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj ID..." />
         <div id="zprava" class="status"></div>
         <div id="stavZamestnancu" class="stav-zamestnancu"></div>
-        <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
+        
+        <!-- Spojená tlačítka na jeden řádek -->
         <div class="action-buttons">
-          <button onclick="exportovatDochazku()">Exportovat</button>
-          <button onclick="vymazatDochazku()">Vymazat docházku</button>
+          <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
+          <button onclick="exportovatDochazku()" class="export-button">Exportovat</button>
+          <button onclick="vymazatDochazku()" class="delete-button">Vymazat docházku</button>
         </div>
       </div>
       <!-- PRAVÝ SLOUPEC -->
@@ -515,7 +548,6 @@
         .filter(z => vybraneSmeny.includes(z.smena))
         .sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'));
 
-      // Vytvoříme HTML pro každou buňku (bez pevného dělení na řádky)
       let gridHTML = "";
       let pocetPritomnych = 0;
       zamList.forEach(zam => {
