@@ -305,14 +305,14 @@
           <button id="btnA1" class="filter-btn">A1</button>
           <button id="btnA2" class="filter-btn">A2</button>
         </div>
-        <h2>Všichni zaměstnanci — <span id="countPr">přítomní: 0</span> / <span id="countAll">0</span></h2>
+        <h2>Všichni zaměstnanci — <span id="countPr"></span></h2>
         <div id="zamestnanciGrid" class="zamestnanci-grid"></div>
       </div>
     </div>
   </div>
 
   <script>
-    // Žádný seznam vedoucích! Stačí role TL v CSV.
+    // Stačí role TL v CSV.
     let jeVedouci = false;
 
     const btnA1 = document.getElementById("btnA1");
@@ -360,7 +360,6 @@
     const stavZamestnancu = document.getElementById("stavZamestnancu");
     const zamestnanciGrid = document.getElementById("zamestnanciGrid");
     const countPr = document.getElementById("countPr");
-    const countAll = document.getElementById("countAll");
 
     async function nacistZamestnanceZeSouboru() {
       const ulozeni = nacistLocal('zamestnanci');
@@ -454,7 +453,7 @@
             prac_pomer: zam.prac_pomer,
             kod: zam.kod,
             cas_prichodu: casStr,
-            funkce: zam.funkce // přidáme pro info
+            funkce: zam.funkce
           };
           pritomni.push(zapis);
           ulozLocal('pritomni_' + vybraneDatum, pritomni);
@@ -524,8 +523,7 @@
     function zobrazZamestnance() {
       if (zamestnanci.length === 0) {
         zamestnanciGrid.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#fff;'>Seznam zaměstnanců je prázdný nebo se načítá.</div>";
-        countPr.textContent = `přítomní: 0`;
-        countAll.textContent = 0;
+        countPr.innerHTML = `přítomní: <strong>0</strong> (<strong>0 KMEN</strong> / <strong>0 AGENT</strong>) / <strong>0</strong>, <span style="color:#ee3b33">nepřítomní: <strong>0</strong></span>`;
         return;
       }
 
@@ -558,9 +556,9 @@
         </div>`;
       });
 
+      const nepocet = zamList.length - pocetPritomnych;
       zamestnanciGrid.innerHTML = gridHTML;
-      countPr.textContent = `přítomní: ${pocetPritomnych} (${pocetKmen}/` + pocetAgent + `)`;
-      countAll.textContent = zamList.length;
+      countPr.innerHTML = `přítomní: <strong>${pocetPritomnych}</strong> (<strong>${pocetKmen} KMEN</strong> / <strong>${pocetAgent} AGENT</strong>) / <strong>${zamList.length}</strong>, <span style="color:#ee3b33">nepřítomní: <strong>${nepocet}</strong></span>`;
     }
 
     function vymazatDochazku() {
