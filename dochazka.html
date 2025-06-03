@@ -424,15 +424,14 @@
           return;
         }
 
-        // Pokud načetl někdo s funkcí TL, aktivují se tlačítka
+        // Pokud načetl někdo s funkcí TL, aktivují se tlačítka (i když už je zapsán!)
         const ved = zamestnanci.find(z => z.kod === kod && z.funkce === "TL");
-        if (ved) {
+        if (ved && !jeVedouci) {
           jeVedouci = true;
           zpravaDiv.textContent = "Přihlášení jako vedoucí (TL): rozšířené funkce povoleny.";
           zpravaDiv.className = "success status";
           zobrazTlacitka();
-          barcodeInput.value = "";
-          return;
+          // NEukončuj! pokračuj k zápisu, může být přítomen.
         }
 
         const zam = zamestnanci.find(z => z.kod === kod);
@@ -440,8 +439,13 @@
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
           zpravaDiv.className = "error status";
         } else if (pritomni.some(p => p.kod === kod)) {
-          zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
-          zpravaDiv.className = "error status";
+          // Pokud byl TL a právě jsme ho aktivovali, nezobrazuj znovu chybu.
+          if (ved && jeVedouci) {
+            // Již vše povoleno výše, neukazuj nic dalšího.
+          } else {
+            zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
+            zpravaDiv.className = "error status";
+          }
         } else {
           const ted = new Date();
           const casStr = formatTime(ted);
@@ -458,7 +462,7 @@
           pritomni.push(zapis);
           ulozLocal('pritomni_' + vybraneDatum, pritomni);
           zobrazZamestnance();
-          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}, ${zam.prac_pomer}, ${zam.funkce || ''}) zapsán v ${casStr}`;
+          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}${zam.funkce ? ', ' + zam.funkce : ''}, ${zam.prac_pomer}) zapsán v ${casStr}`;
           zpravaDiv.className = "success status";
         }
         barcodeInput.value = "";
@@ -548,18 +552,17 @@
         }
         let cellClass = pr ? 'pritomen-cell' : '';
         if (pr && zam.prac_pomer === "AGENT") cellClass += ' agent';
+        // **V JEDNÉM ŘÁDKU: smena, funkce**
         gridHTML += `<div class="zamestnanec-cell${cellClass ? ' ' + cellClass : ''}">
           <div>${zam.jmeno}</div>
-          <div style="font-size:11px; opacity:0.85;">
-            ${[zam.smena, zam.funkce].filter(Boolean).join(', ')}
-          </div>
-          <div style="font-size:11px; opacity:0.7;">${zam.prac_pomer || ""}</div>
+          <div style="font-size:11px; opacity:0.8;">${zam.smena || ""}${zam.funkce ? ', ' + zam.funkce : ''}</div>
+          <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer || ""}</div>
         </div>`;
       });
 
       const nepocet = zamList.length - pocetPritomnych;
-      zamestnanciGrid.innerHTML = gridHTML;
       countPr.innerHTML = `přítomní: <strong>${pocetPritomnych}</strong> (<strong>${pocetKmen} KMEN</strong> / <strong>${pocetAgent} AGENT</strong>) / <strong>${zamList.length}</strong>, <span style="color:#ee3b33">nepřítomní: <strong>${nepocet}</strong></span>`;
+      zamestnanciGrid.innerHTML = gridHTML;
     }
 
     function vymazatDochazku() {
