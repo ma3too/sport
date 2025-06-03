@@ -44,10 +44,61 @@
       transition: background 0.2s;
     }
     #exportBtn:hover { background: #ffc300; }
+    /* Modální okno */
+    #modalOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #modalBox {
+      background: #fff;
+      color: #0066b3;
+      padding: 38px 44px;
+      border-radius: 18px;
+      box-shadow: 0 4px 40px #0006;
+      text-align: center;
+      font-size: 2.8rem;
+      font-weight: bold;
+      min-width: 310px;
+      min-height: 120px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      animation: showModal .18s;
+    }
+    @keyframes showModal { from {transform: scale(0.9); opacity:0;} to {transform: scale(1); opacity:1;} }
+    #modalBox .zone {
+      font-size: 1.2rem;
+      color: #444;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    #modalBox button {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      padding: 8px 28px;
+      border: none;
+      background: #0066b3;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.15s;
+    }
+    #modalBox button:hover {
+      background: #ff3232;
+    }
     @media (max-width: 700px) {
       .panel { flex-direction: column; align-items: flex-start; gap: 8px;}
       #barcodeInput { width: 100%; }
       table { font-size: 13px; }
+      #modalBox { font-size: 2rem; min-width: 170px; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -69,6 +120,14 @@
     </thead>
     <tbody></tbody>
   </table>
+  <!-- Modální okno -->
+  <div id="modalOverlay">
+    <div id="modalBox">
+      <div id="modalCode"></div>
+      <div id="modalZone" class="zone"></div>
+      <button id="modalClose">OK</button>
+    </div>
+  </div>
   <script>
     let codes = [];
     let scanned = new Set();
@@ -132,9 +191,17 @@
     }
 
     function renderTable() {
+      // Nejprve nalezené, pak nenalezené (scanned nahoře)
       const tbody = document.querySelector('#codeTable tbody');
       tbody.innerHTML = '';
-      codes.forEach((row, i) => {
+      // řazení: scanned nahoře
+      let sorted = [...codes].sort((a, b) => {
+        const aScanned = scanned.has(a.code) ? 0 : 1;
+        const bScanned = scanned.has(b.code) ? 0 : 1;
+        if (aScanned !== bScanned) return aScanned - bScanned;
+        return a.code.localeCompare(b.code, 'cs');
+      });
+      sorted.forEach((row, i) => {
         let status = scanned.has(row.code) ? '✅ Oskenováno' : '';
         let tr = `<tr class="${scanned.has(row.code) ? 'scanned' : ''}">
           <td>${i + 1}</td>
@@ -164,6 +231,31 @@
       setTimeout(() => { el.style.display = 'none'; }, 2000);
     }
 
+    // MODÁLNÍ OKNO pro zobrazení krabice
+    function showModal(code, zone) {
+      document.getElementById('modalCode').textContent = code;
+      document.getElementById('modalZone').textContent = 'Zóna: ' + zone;
+      document.getElementById('modalOverlay').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('modalClose').focus();
+      }, 100);
+    }
+
+    function hideModal() {
+      document.getElementById('modalOverlay').style.display = 'none';
+      showBarcodeInput();
+    }
+
+    document.getElementById('modalClose').onclick = hideModal;
+    document.getElementById('modalOverlay').onclick = function(e) {
+      if (e.target === this) hideModal();
+    };
+    document.addEventListener('keydown', function(e) {
+      if (document.getElementById('modalOverlay').style.display === 'flex' && (e.key === "Enter" || e.key === "Escape")) {
+        hideModal();
+      }
+    });
+
     // Hlavní část pro "skenování" z čtečky
     document.getElementById('barcodeInput').addEventListener('change', onInputScan);
     document.getElementById('barcodeInput').addEventListener('input', function(e) {
@@ -178,7 +270,7 @@
       if (found && !scanned.has(found.code)) {
         scanned.add(found.code);
         saveToStorage();
-        showAlert("✅ Krabice " + found.code + " (zóna " + found.zone + ") nalezena!");
+        showModal(found.code, found.zone); // Velké okno
         blinkInput();
         renderTable();
       }
@@ -214,12 +306,12 @@
     // Udržuj focus na poli (proti ztrátě focusu kliknutím, tabulátorem apod.)
     document.addEventListener('click', function() {
       const input = document.getElementById('barcodeInput');
-      if (input && input.style.display !== "none") input.focus();
+      if (input && input.style.display !== "none" && document.getElementById('modalOverlay').style.display !== 'flex') input.focus();
     });
 
     document.addEventListener('keydown', function(e) {
-      // Stisknutí ESC smaže pole
-      if (e.key === "Escape") {
+      // Stisknutí ESC smaže pole, pokud není otevřené modální okno
+      if (e.key === "Escape" && document.getElementById('modalOverlay').style.display !== 'flex') {
         const input = document.getElementById('barcodeInput');
         if (input && input.style.display !== "none") input.value = "";
       }
