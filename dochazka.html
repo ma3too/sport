@@ -312,9 +312,7 @@
   </div>
 
   <script>
-    // Nastav zde kód vedoucího, případně přidej více do pole:
-    const VEDOUCI_KODY = ["vedouci123", "99999"]; // Zde zadej opravdové kódy vedoucích
-
+    // Žádný seznam vedoucích! Stačí role TL v CSV.
     let jeVedouci = false;
 
     const btnA1 = document.getElementById("btnA1");
@@ -328,11 +326,11 @@
     function parseCSV(csv) {
       const sep = csv.includes(';') ? ';' : ',';
       const lines = csv.trim().split('\n');
-      const headers = lines[0].split(sep);
+      const headers = lines[0].split(sep).map(h => h.trim().toLowerCase());
       return lines.slice(1).map(line => {
         const values = line.split(sep);
         let obj = {};
-        headers.forEach((h, i) => { obj[h.trim()] = (values[i] || "").trim(); });
+        headers.forEach((h, i) => { obj[h] = (values[i] || "").trim(); });
         return obj;
       });
     }
@@ -426,10 +424,12 @@
           zpravaDiv.className = "error status";
           return;
         }
-        // Pokud zadal vedoucí kartu – zobrazí se tlačítka!
-        if (VEDOUCI_KODY.includes(kod)) {
+
+        // Pokud načetl někdo s funkcí TL, aktivují se tlačítka
+        const ved = zamestnanci.find(z => z.kod === kod && z.funkce === "TL");
+        if (ved) {
           jeVedouci = true;
-          zpravaDiv.textContent = "Přihlášení jako vedoucí: rozšířené funkce povoleny.";
+          zpravaDiv.textContent = "Přihlášení jako vedoucí (TL): rozšířené funkce povoleny.";
           zpravaDiv.className = "success status";
           zobrazTlacitka();
           barcodeInput.value = "";
@@ -453,12 +453,13 @@
             smena: zam.smena,
             prac_pomer: zam.prac_pomer,
             kod: zam.kod,
-            cas_prichodu: casStr
+            cas_prichodu: casStr,
+            funkce: zam.funkce // přidáme pro info
           };
           pritomni.push(zapis);
           ulozLocal('pritomni_' + vybraneDatum, pritomni);
           zobrazZamestnance();
-          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}, ${zam.prac_pomer}) zapsán v ${casStr}`;
+          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}, ${zam.prac_pomer}, ${zam.funkce || ''}) zapsán v ${casStr}`;
           zpravaDiv.className = "success status";
         }
         barcodeInput.value = "";
@@ -551,8 +552,9 @@
         if (pr && zam.prac_pomer === "AGENT") cellClass += ' agent';
         gridHTML += `<div class="zamestnanec-cell${cellClass ? ' ' + cellClass : ''}">
           <div>${zam.jmeno}</div>
-          <div style="font-size:11px; opacity:0.8;">${zam.smena}</div>
-          <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer}</div>
+          <div style="font-size:11px; opacity:0.8;">${zam.smena || ""}</div>
+          <div style="font-size:11px; opacity:0.7;">${zam.funkce || ""}</div>
+          <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer || ""}</div>
         </div>`;
       });
 
@@ -587,6 +589,7 @@
           zam.jmeno,
           zam.pozice,
           zam.smena,
+          zam.funkce,
           zam.prac_pomer,
           zam.kod,
           pr ? pr.cas_prichodu : "",
@@ -599,6 +602,7 @@
         "Jméno",
         "Pozice",
         "Směna",
+        "Funkce",
         "Pracovní poměr",
         "Kód",
         "Čas příchodu",
