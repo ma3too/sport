@@ -423,28 +423,31 @@
           zpravaDiv.className = "error status";
           return;
         }
-
-        // Pokud načetl někdo s funkcí TL, aktivují se tlačítka (i když už je zapsán!)
+    
+        // ⬇️ Kontrola VEDOUCÍHO (TL) – UŽ NA ZAČÁTKU!
         const ved = zamestnanci.find(z => z.kod === kod && z.funkce === "TL");
-        if (ved && !jeVedouci) {
+        if (ved) {
           jeVedouci = true;
           zpravaDiv.textContent = "Přihlášení jako vedoucí (TL): rozšířené funkce povoleny.";
           zpravaDiv.className = "success status";
           zobrazTlacitka();
-          // NEukončuj! pokračuj k zápisu, může být přítomen.
+          barcodeInput.value = "";
+          // ⬇️ Zde je důležité **nevracet**, aby mohl být TL i zapsán.
+          // return;   // <-- tento řádek SMAŽ nebo ZAKOMENTUJ
+          // Pokud chceš, aby šlo zároveň TL zapsat jako přítomného, nech pokračovat dál
         }
-
+    
         const zam = zamestnanci.find(z => z.kod === kod);
         if (!zam) {
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
           zpravaDiv.className = "error status";
         } else if (pritomni.some(p => p.kod === kod)) {
-          // Pokud byl TL a právě jsme ho aktivovali, nezobrazuj znovu chybu.
-          if (ved && jeVedouci) {
-            // Již vše povoleno výše, neukazuj nic dalšího.
-          } else {
-            zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
-            zpravaDiv.className = "error status";
+          zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
+          zpravaDiv.className = "error status";
+          // ALE I TADY PROVEĎ zobrazTlacitka(), pokud je to TL!
+          if (zam.funkce === "TL") {
+            jeVedouci = true;
+            zobrazTlacitka();
           }
         } else {
           const ted = new Date();
@@ -462,7 +465,7 @@
           pritomni.push(zapis);
           ulozLocal('pritomni_' + vybraneDatum, pritomni);
           zobrazZamestnance();
-          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}${zam.funkce ? ', ' + zam.funkce : ''}, ${zam.prac_pomer}) zapsán v ${casStr}`;
+          zpravaDiv.textContent = `${zam.jmeno} (${zam.smena}, ${zam.prac_pomer}, ${zam.funkce || ''}) zapsán v ${casStr}`;
           zpravaDiv.className = "success status";
         }
         barcodeInput.value = "";
