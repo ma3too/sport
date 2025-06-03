@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Tisk čárových kódů na etiketu</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #0066b3;
+      font-family: 'Open Sans', sans-serif;
+      color: white;
+      padding: 0;
+      text-align: center;
+    }
+    .main-content {
+      margin: 60px auto 0;
+      width: 98vw;
+      max-width: 580px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 26px 16px 36px 16px;
+      box-shadow: 0 2px 18px rgba(0,0,0,0.09);
+    }
+    label { font-size: 1.08rem; font-weight: 600; display: block; margin: 14px 0 6px 0;}
+    input {
+      padding: 8px 13px;
+      font-size: 1.07rem;
+      width: 86%;
+      border-radius: 6px;
+      border: 1.2px solid #bbb;
+      font-family: 'Open Sans', sans-serif;
+      margin-bottom: 8px;
+      background: #fff;
+      color: #222;
+      font-weight: 400;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 24px;
+      font-size: 1.1rem;
+      border-radius: 7px;
+      border: none;
+      background: #DB4B3E;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.17s, transform 0.18s;
+    }
+    button:hover { background: #b43a2e; transform: scale(1.03);}
+    .print-area-wrap {
+      margin: 42px auto 0;
+      max-width: 98vw;
+      overflow: auto;
+      background: #fff;
+      padding: 8px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      color: #222;
+    }
+    .print-label {
+      display: grid;
+      justify-items: center;
+      align-items: center;
+      background: #fff;
+      margin: 0 auto;
+      border-radius: 6px;
+      position: relative;
+      box-sizing: border-box;
+    }
+    @media print {
+      body * { visibility: hidden !important; }
+      .print-label, .print-label * {
+        visibility: visible !important;
+      }
+      .print-area-wrap {
+        position: absolute !important;
+        left: 0; top: 0; width: 100vw !important; height: 100vh !important;
+        background: #fff !important;
+        margin: 0 !important; padding: 0 !important; box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-content">
+    <label for="barcode-list">Kódy (odděluj středníkem):</label>
+    <input type="text" id="barcode-list" value="8595608400555;8595608400562" placeholder="EAN kódy oddělené středníkem">
+    <label for="label-size">Velikost etikety (mm):</label>
+    <input type="text" id="label-size" value="100x150" placeholder="např. 100x150">
+    <label for="barcode-size">Velikost kódu (mm):</label>
+    <input type="text" id="barcode-size" value="36x54" placeholder="např. 36x54">
+    <label for="gap">Mezera mezi kódy (mm):</label>
+    <input type="number" id="gap" value="3" min="0" step="1">
+    <button onclick="generateLabels()">Vytvořit etiketu</button>
+    <button style="background:#333;margin-left:16px;" onclick="printLabels()">Tisknout</button>
+  </div>
+  <div id="print-area" class="print-area-wrap" style="display:none"></div>
+  <script>
+    // Pomocné: převod mm na px (pro tisknutelný režim)
+    function mmToPx(mm) {
+      return Math.round(mm * (96 / 25.4)); // 96dpi standard
+    }
+
+    function generateLabels() {
+      const codes = document.getElementById('barcode-list').value.split(';').map(x=>x.trim()).filter(Boolean);
+      const [labelW, labelH] = document.getElementById('label-size').value.toLowerCase().replace(' ', '').split('x').map(Number);
+      const [bcW, bcH] = document.getElementById('barcode-size').value.toLowerCase().replace(' ', '').split('x').map(Number);
+      const gap = Number(document.getElementById('gap').value);
+
+      if (!labelW || !labelH || !bcW || !bcH || codes.length === 0) {
+        alert("Vyplň všechny údaje správně.");
+        return;
+      }
+      // Kolik EANů se vejde na etiketu?
+      const cols = Math.max(1, Math.floor((labelW + gap) / (bcW + gap)));
+      const rows = Math.max(1, Math.floor((labelH + gap) / (bcH + gap)));
+      const maxCodes = cols * rows;
+
+      let displayCodes = [];
+      // Pokud méně než max -> zopakuj dokud se nevyplní celé pole
+      if (codes.length < maxCodes) {
+        let i = 0;
+        while (displayCodes.length < maxCodes) {
+          displayCodes.push(codes[i % codes.length]);
+          i++;
+        }
+      } else {
+        displayCodes = codes.slice(0, maxCodes);
+      }
+
+      // Tisknutelné pole
+      const printArea = document.getElementById('print-area');
+      printArea.innerHTML = '';
+      printArea.style.display = 'block';
+
+      // Připravíme etiketu jako grid
+      const grid = document.createElement('div');
+      grid.className = 'print-label';
+      grid.style.width = mmToPx(labelW) + 'px';
+      grid.style.height = mmToPx(labelH) + 'px';
+      grid.style.gridTemplateColumns = `repeat(${cols}, ${mmToPx(bcW)}px)`;
+      grid.style.gridTemplateRows = `repeat(${rows}, ${mmToPx(bcH)}px)`;
+      grid.style.gap = mmToPx(gap) + 'px';
+
+      displayCodes.forEach((code, i) => {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute('width', mmToPx(bcW));
+        svg.setAttribute('height', mmToPx(bcH));
+        svg.style.background = '#fff';
+        svg.style.borderRadius = '4px';
+        JsBarcode(svg, code, {
+          format: "CODE128",
+          width: Math.max(2, mmToPx(bcW)/60), // jemně upravit podle šířky
+          height: mmToPx(bcH)-16,
+          margin: 2,
+          displayValue: true,
+          fontSize: Math.round(mmToPx(bcH)/6),
+          textMargin: 2
+        });
+        grid.appendChild(svg);
+      });
+
+      printArea.appendChild(grid);
+      window.scrollTo(0,document.body.scrollHeight);
+    }
+
+    function printLabels() {
+      const printArea = document.getElementById('print-area');
+      if (!printArea || printArea.innerHTML.trim()==='') {
+        alert("Nejdříve vytvoř etiketu.");
+        return;
+      }
+      window.print();
+    }
+  </script>
+</body>
+</html>
