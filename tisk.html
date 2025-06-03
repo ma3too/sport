@@ -2,179 +2,175 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Tisk čárových kódů na etiketu</title>
+  <title>Picktower – generátor štítků</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
-    body {
-      background: #0066b3;
-      font-family: 'Open Sans', sans-serif;
-      color: white;
-      padding: 0;
-      text-align: center;
-    }
-    .main-content {
-      margin: 60px auto 0;
-      width: 98vw;
-      max-width: 580px;
-      background: rgba(255,255,255,0.07);
-      border-radius: 16px;
-      padding: 26px 16px 36px 16px;
-      box-shadow: 0 2px 18px rgba(0,0,0,0.09);
-    }
-    label { font-size: 1.08rem; font-weight: 600; display: block; margin: 14px 0 6px 0;}
-    input {
-      padding: 8px 13px;
-      font-size: 1.07rem;
-      width: 86%;
-      border-radius: 6px;
-      border: 1.2px solid #bbb;
-      font-family: 'Open Sans', sans-serif;
-      margin-bottom: 8px;
-      background: #fff;
-      color: #222;
-      font-weight: 400;
-      box-sizing: border-box;
-    }
-    button {
-      margin-top: 20px;
-      padding: 10px 24px;
-      font-size: 1.1rem;
-      border-radius: 7px;
-      border: none;
-      background: #DB4B3E;
-      color: #fff;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.17s, transform 0.18s;
-    }
-    button:hover { background: #b43a2e; transform: scale(1.03);}
-    .print-area-wrap {
-      margin: 42px auto 0;
-      max-width: 98vw;
-      overflow: auto;
-      background: #fff;
-      padding: 8px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      color: #222;
-    }
-    .print-label {
-      display: grid;
-      justify-items: center;
-      align-items: center;
-      background: #fff;
-      margin: 0 auto;
-      border-radius: 6px;
-      position: relative;
-      box-sizing: border-box;
-    }
+    body { background: #0066b3; font-family: 'Open Sans',sans-serif; color: white; text-align: center; }
+    .main-content { margin: 60px auto 0; width: 97vw; max-width: 690px; background: rgba(255,255,255,0.09); border-radius: 18px; padding: 26px 18px 36px 18px; }
+    label { font-size: 1.08rem; font-weight: 600; display: block; margin: 9px 0 4px 0;}
+    input, select { padding: 7px 12px; font-size: 1.03rem; border-radius: 6px; border: 1.1px solid #bbb; font-family: 'Open Sans', sans-serif; background: #fff; color: #222; font-weight: 400; margin-right: 8px;}
+    .inline { display: inline-block; }
+    .pozice-box label { display: inline-block; font-weight: 400; margin-right: 10px; }
+    .checkbox { transform: scale(1.16); margin-right: 2px; }
+    .kody-preview { background: #fff; color: #223; border-radius: 8px; margin: 24px auto 0; max-width: 530px; min-height: 40px; text-align: left; padding: 10px 14px; font-size: 1.1rem; }
+    .print-area-wrap { margin: 36px auto 0; max-width: 98vw; overflow: auto; background: #fff; padding: 8px; border-radius: 10px; color: #222; }
+    .print-labels-grid { display: flex; flex-wrap: wrap; gap: 12px; justify-content: start;}
+    .print-label { background: #fff; border-radius: 7px; box-shadow: 0 2px 8px rgba(0,0,0,0.09); padding: 6px 10px 2px 10px; margin: 2px; min-width: 120px;}
     @media print {
       body * { visibility: hidden !important; }
-      .print-label, .print-label * {
-        visibility: visible !important;
-      }
+      .print-labels-grid, .print-labels-grid * { visibility: visible !important;}
       .print-area-wrap {
-        position: absolute !important;
-        left: 0; top: 0; width: 100vw !important; height: 100vh !important;
-        background: #fff !important;
-        margin: 0 !important; padding: 0 !important; box-shadow: none !important;
-        border-radius: 0 !important;
+        position: absolute !important; left: 0; top: 0; width: 100vw !important; height: 100vh !important;
+        background: #fff !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; border-radius: 0 !important;
       }
+      .main-content, .btn-row { display: none !important; }
     }
+    .btn-row { margin-top: 22px; }
+    button {
+      margin: 6px 11px 0 0; padding: 9px 24px; font-size: 1.08rem; border-radius: 7px; border: none;
+      background: #DB4B3E; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.17s, transform 0.18s;
+    }
+    button:hover { background: #b43a2e; transform: scale(1.03);}
   </style>
 </head>
 <body>
   <div class="main-content">
-    <label for="barcode-list">Kódy (odděluj středníkem):</label>
-    <input type="text" id="barcode-list" value="8595608400555;8595608400562" placeholder="EAN kódy oddělené středníkem">
-    <label for="label-size">Velikost etikety (mm):</label>
-    <input type="text" id="label-size" value="100x150" placeholder="např. 100x150">
-    <label for="barcode-size">Velikost kódu (mm):</label>
-    <input type="text" id="barcode-size" value="36x54" placeholder="např. 36x54">
-    <label for="gap">Mezera mezi kódy (mm):</label>
-    <input type="number" id="gap" value="3" min="0" step="1">
-    <button onclick="generateLabels()">Vytvořit etiketu</button>
-    <button style="background:#333;margin-left:16px;" onclick="printLabels()">Tisknout</button>
+    <label for="zona">Zóna:</label>
+    <select id="zona">
+      <option>PTA</option><option>PTB</option><option>PTC</option><option>PTD</option><option>PTE</option>
+    </select>
+    <div>
+      <label>Ulička: od <input id="ulicka-od" type="number" value="001" min="1" max="140" style="width:56px"> do <input id="ulicka-do" type="number" value="040" min="1" max="140" style="width:56px">
+        (použij 001–040, nebo 101–140)
+      </label>
+    </div>
+    <div>
+      <label>Řada: od <input id="rada-od" type="number" value="00" min="0" max="100" style="width:44px"> do <input id="rada-do" type="number" value="10" min="0" max="100" style="width:44px">
+        <span style="margin-left:10px;">
+          <label><input type="radio" name="typ-rady" value="all" checked>vše</label>
+          <label><input type="radio" name="typ-rady" value="even">sudé</label>
+          <label><input type="radio" name="typ-rady" value="odd">liché</label>
+        </span>
+      </label>
+    </div>
+    <div class="pozice-box">
+      <label>Pozice:
+        <label><input type="checkbox" class="checkbox pozice" value="1" checked>1</label>
+        <label><input type="checkbox" class="checkbox pozice" value="2" checked>2</label>
+        <label><input type="checkbox" class="checkbox pozice" value="3" checked>3</label>
+        <label><input type="checkbox" class="checkbox pozice" value="4" checked>4</label>
+        <label><input type="checkbox" class="checkbox pozice" value="X">X</label>
+        <label><input type="checkbox" class="checkbox pozice" value="L">L</label>
+        <label><input type="checkbox" class="checkbox pozice" value="A">A</label>
+        <label><input type="checkbox" class="checkbox pozice" value="B">B</label>
+      </label>
+    </div>
+    <div>
+      <label for="label-size">Velikost štítku (mm):</label>
+      <input type="text" id="label-size" value="100x50" placeholder="např. 100x50" style="width:110px">
+      <label for="barcode-size">Velikost kódu (mm):</label>
+      <input type="text" id="barcode-size" value="60x30" placeholder="např. 60x30" style="width:110px">
+    </div>
+    <div class="btn-row">
+      <button onclick="generateCodes()">Generovat kódy</button>
+      <button style="background:#333;" onclick="printLabels()">Tisknout</button>
+    </div>
+    <div class="kody-preview" id="kody-preview"></div>
   </div>
   <div id="print-area" class="print-area-wrap" style="display:none"></div>
   <script>
-    // Pomocné: převod mm na px (pro tisknutelný režim)
-    function mmToPx(mm) {
-      return Math.round(mm * (96 / 25.4)); // 96dpi standard
+    function pad(num, len) {
+      num = String(num);
+      while (num.length < len) num = "0" + num;
+      return num;
     }
-
-    function generateLabels() {
-      const codes = document.getElementById('barcode-list').value.split(';').map(x=>x.trim()).filter(Boolean);
+    function generateCodes(previewOnly = false) {
+      const zona = document.getElementById('zona').value;
+      const uOd = parseInt(document.getElementById('ulicka-od').value, 10);
+      const uDo = parseInt(document.getElementById('ulicka-do').value, 10);
+      const rOd = parseInt(document.getElementById('rada-od').value, 10);
+      const rDo = parseInt(document.getElementById('rada-do').value, 10);
+      const typRady = document.querySelector('input[name="typ-rady"]:checked').value;
+      const pozice = Array.from(document.querySelectorAll('.pozice:checked')).map(x => x.value);
+      let kody = [];
+      for (let u = uOd; u <= uDo; u++) {
+        let uStr = pad(u, 3);
+        for (let r = rOd; r <= rDo; r++) {
+          // filtrovat podle sudé/liché/vše
+          if (typRady === "even" && r % 2 !== 0) continue;
+          if (typRady === "odd" && r % 2 === 0) continue;
+          let rStr = pad(r, 2);
+          for (let p of pozice) {
+            kody.push(zona + uStr + rStr + p);
+          }
+        }
+      }
+      // Výpis do preview
+      document.getElementById('kody-preview').textContent = kody.slice(0,100).join(', ') + (kody.length > 100 ? " … (celkem "+kody.length+" štítků)" : " ("+kody.length+" štítků)");
+      // Pokud jsme v "preview", neřeš tisk
+      if (previewOnly) return kody;
+      // ---- Vygeneruj štítky k tisku ----
       const [labelW, labelH] = document.getElementById('label-size').value.toLowerCase().replace(' ', '').split('x').map(Number);
       const [bcW, bcH] = document.getElementById('barcode-size').value.toLowerCase().replace(' ', '').split('x').map(Number);
-      const gap = Number(document.getElementById('gap').value);
-
-      if (!labelW || !labelH || !bcW || !bcH || codes.length === 0) {
-        alert("Vyplň všechny údaje správně.");
+      if (!labelW || !labelH || !bcW || !bcH) {
+        alert("Zkontroluj rozměry štítku i kódu.");
         return;
       }
-      // Kolik EANů se vejde na etiketu?
-      const cols = Math.max(1, Math.floor((labelW + gap) / (bcW + gap)));
-      const rows = Math.max(1, Math.floor((labelH + gap) / (bcH + gap)));
-      const maxCodes = cols * rows;
-
-      let displayCodes = [];
-      // Pokud méně než max -> zopakuj dokud se nevyplní celé pole
-      if (codes.length < maxCodes) {
-        let i = 0;
-        while (displayCodes.length < maxCodes) {
-          displayCodes.push(codes[i % codes.length]);
-          i++;
-        }
-      } else {
-        displayCodes = codes.slice(0, maxCodes);
-      }
-
-      // Tisknutelné pole
       const printArea = document.getElementById('print-area');
       printArea.innerHTML = '';
       printArea.style.display = 'block';
-
-      // Připravíme etiketu jako grid
       const grid = document.createElement('div');
-      grid.className = 'print-label';
-      grid.style.width = mmToPx(labelW) + 'px';
-      grid.style.height = mmToPx(labelH) + 'px';
-      grid.style.gridTemplateColumns = `repeat(${cols}, ${mmToPx(bcW)}px)`;
-      grid.style.gridTemplateRows = `repeat(${rows}, ${mmToPx(bcH)}px)`;
-      grid.style.gap = mmToPx(gap) + 'px';
-
-      displayCodes.forEach((code, i) => {
+      grid.className = 'print-labels-grid';
+      // každý štítek
+      kody.forEach(kod => {
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'print-label';
+        labelDiv.style.width = mmToPx(labelW) + 'px';
+        labelDiv.style.height = mmToPx(labelH) + 'px';
+        // Text - kód jako nadpis
+        const descDiv = document.createElement('div');
+        descDiv.style.fontWeight = 'bold';
+        descDiv.style.fontSize = '1.11rem';
+        descDiv.style.textAlign = 'center';
+        descDiv.style.marginBottom = '2px';
+        descDiv.textContent = kod;
+        labelDiv.appendChild(descDiv);
+        // SVG s čárovým kódem
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute('width', mmToPx(bcW));
         svg.setAttribute('height', mmToPx(bcH));
-        svg.style.background = '#fff';
-        svg.style.borderRadius = '4px';
-        JsBarcode(svg, code, {
+        svg.style.display = "block";
+        svg.style.margin = "0 auto";
+        JsBarcode(svg, kod, {
           format: "CODE128",
-          width: Math.max(2, mmToPx(bcW)/60), // jemně upravit podle šířky
-          height: mmToPx(bcH)-16,
+          width: Math.max(2, mmToPx(bcW)/60),
+          height: mmToPx(bcH)-12,
           margin: 2,
-          displayValue: true,
-          fontSize: Math.round(mmToPx(bcH)/6),
-          textMargin: 2
+          displayValue: false // pod kódem už bude text výše
         });
-        grid.appendChild(svg);
+        labelDiv.appendChild(svg);
+        grid.appendChild(labelDiv);
       });
-
       printArea.appendChild(grid);
       window.scrollTo(0,document.body.scrollHeight);
     }
-
+    // Aktualizace preview automaticky
+    document.querySelectorAll('#zona, #ulicka-od, #ulicka-do, #rada-od, #rada-do, input[name="typ-rady"], .pozice').forEach(el => {
+      el.addEventListener('input', () => generateCodes(true));
+      el.addEventListener('change', () => generateCodes(true));
+    });
+    function mmToPx(mm) { return Math.round(mm * (96 / 25.4)); }
     function printLabels() {
       const printArea = document.getElementById('print-area');
-      if (!printArea || printArea.innerHTML.trim()==='') {
-        alert("Nejdříve vytvoř etiketu.");
+      if (!printArea || printArea.innerHTML.trim() === '') {
+        alert("Nejdříve vytvoř štítky.");
         return;
       }
       window.print();
     }
+    // První vygenerování preview
+    window.onload = () => generateCodes(true);
   </script>
 </body>
 </html>
