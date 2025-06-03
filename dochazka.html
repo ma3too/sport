@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Docházka</title>
-  <link rel="icon" type="image/png" href="static/logo.png"> <!-- Favicon pro záložku -->
+  <link rel="icon" type="image/png" href="static/logo.png"> <!-- Favicon -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -343,8 +343,8 @@
       <!-- PRAVÝ SLOUPEC -->
       <div class="right-column">
         <div class="filter-buttons">
-          <button id="btnA1" class="filter-btn">A1</button>
-          <button id="btnA2" class="filter-btn">A2</button>
+          <button id="btnA1" class="filter-btn active">A1</button>
+          <button id="btnA2" class="filter-btn active">A2</button>
         </div>
         <h2>Všichni zaměstnanci — <span id="countPr"></span></h2>
         <div id="zamestnanciGrid" class="zamestnanci-grid"></div>
@@ -642,12 +642,8 @@
     }
 
     function exportovatDochazku() {
-      const vybraneSmeny = [];
-      if (filterA1) vybraneSmeny.push('A1');
-      if (filterA2) vybraneSmeny.push('A2');
-
+      // Exportuje VŠECHNY zaměstnance, nejen filtrované
       let exportList = zamestnanci
-        .filter(z => vybraneSmeny.includes(z.smena))
         .sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'));
 
       let exportData = exportList.map(zam => {
