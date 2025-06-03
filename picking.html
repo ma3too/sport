@@ -4,287 +4,271 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Rozdělení pracovníků na picking</title>
+  <!-- Google font pro stejný vzhled jako docházka -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* ===== Globální nastavení ===== */
     body {
-      margin: 90px;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background-color: #0066b3;   /* modré pozadí */
-      color: #000000;               /* tmavý text */
+      margin: 0;
+      padding: 0;
+      font-family: 'Open Sans', Arial, sans-serif;
+      background-color: #0066b3;
+      color: #000000;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
-    .container {
-      max-width: 700px;
+    .header {
       width: 100%;
-      margin: 0 auto;      
-      background-color: #FFFFFF;   /* přidáno pozadí, aby bylo vidět zaoblení */
-      border-radius: 10px;         /* zaoblené rohy */
-      padding: 20px;               /* doporučeno, aby obsah nebyl nalepený na hraně */
-    }
-
-    h1 {
+      background: #0066b3;
+      padding: 42px 0 32px 0;
       text-align: center;
-      margin-top: 10px;
-      color: #0066b3;
-      font-size: 24px;
+      margin-bottom: 0px;
     }
-
-    /* ===== Tabulka se zónami ===== */
+    .header-title {
+      color: #fff;
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin: 0;
+      text-shadow: 0 2px 12px #00407066;
+    }
+    .container {
+      max-width: 900px;
+      width: 97vw;
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 38px 30px 28px 30px;
+      margin-top: -25px;
+      box-shadow: 0 4px 28px #00336024;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     .zones-table {
-      width: auto;                /* tabulka se smrští podle obsahu */
-      border-collapse: collapse;
-      table-layout: fixed;        /* pevné rozložení */
-      margin: 20px auto 0;        /* vycentrovaná tabulka */
-      background-color: #FFFFFF;  /* světlé pozadí tabulky */
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 12px;
+      margin: 20px 0 0 0;
+      background: #fff;
+      font-size: 1.2rem;
     }
     .zones-table th,
     .zones-table td {
-      border: none;               /* odstraněný vnitřní obrys buněk */
-      padding: 6px;
+      padding: 10px 6px;
       text-align: center;
       vertical-align: middle;
-      font-size: 14px;
-      background-color: #FFFFFF;
+      border: none;
+      background: #fff;
     }
     .zones-table td.zone-label {
-      width: 20px;                /* pevná šířka pro název zóny */
-      font-weight: bold;
-      background-color: #FFFFFF;
-      color: #000000;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: #0066b3;
+      background: #fff;
     }
     .zones-table td.zone-result {
-      width: 20px;                /* pevná šířka pro počet pracovníků */
-      background-color: #FFFFFF;
-      font-weight: bold;
+      font-weight: 700;
       color: #DB4B3E;
+      font-size: 1.2rem;
+      background: #fff;
     }
     .zones-table td.zone-input {
-      width: 80px;                /* vstupní sloupec */
-      background-color: #FFFFFF;
+      background: #fff;
+      width: 80px;
     }
     .zones-table input.zone-input-field {
-      width: 100%;
-      padding: 4px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
+      width: 75px;
+      padding: 7px 4px;
+      font-size: 1.12rem;
+      border: 1.5px solid #bbb;
+      border-radius: 6px;
       text-align: center;
-      color: #000;
-      background-color: #FFFFFF;
+      color: #222;
+      background: #f9f9f9;
+      transition: border .15s;
     }
-
-    /* ===== Řádek s ovládacími prvky pod tabulkou ===== */
+    .zones-table input.zone-input-field:focus {
+      border: 1.5px solid #0066b3;
+      outline: none;
+      background: #fff;
+    }
     .control-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 15px;
-      margin-top: 15px;
+      gap: 24px;
+      margin-top: 24px;
       justify-content: center;
       align-items: flex-end;
-      color: #FFFFFF;
+      width: 100%;
     }
     .control-row .input-group {
       display: flex;
       flex-direction: column;
-      margin: 0;
+      min-width: 130px;
     }
     .control-row label {
-      font-weight: bold;
-      margin-bottom: 4px;
-      color: #000000;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #0066b3;
+      font-size: 1.05rem;
     }
     .control-row input {
-      width: 120px;
-      padding: 6px;
-      font-size: 14px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
+      width: 100%;
+      padding: 8px;
+      font-size: 1.13rem;
+      border: 1.5px solid #bbb;
+      border-radius: 6px;
+      color: #222;
+      background: #f9f9f9;
       text-align: center;
-      color: #000;
-      background-color: #FFFFFF;
     }
-
-    /* ===== Tlačítka ===== */
+    .control-row input:focus {
+      border: 1.5px solid #0066b3;
+      background: #fff;
+      outline: none;
+    }
     button {
-      padding: 8px 25px;
-      font-size: 14px;
+      padding: 11px 32px;
+      font-size: 1.1rem;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       background-color: #DB4B3E;
-      color: #FFFFFF;
+      color: #fff;
+      font-weight: 700;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: background .2s, transform .2s;
+      margin-top: 4px;
     }
     button:hover {
-      transform: scale(1.03);
-      transition: all 0.2s ease;
+      background: #e95a46;
+      transform: scale(1.05);
     }
-
-    /* ===== Souhrn na jeden řádek ===== */
     .summary {
       text-align: center;
-      margin-top: 15px;
-      font-size: 16px;
+      margin-top: 32px;
+      font-size: 1.17rem;
       font-weight: bold;
+      width: 100%;
     }
     .summary p {
-      display: inline;
-      margin: 0 20px;
-      color: #0066b3;           /* bílý text */
+      display: inline-block;
+      margin: 0 28px 0 0;
+      color: #0066b3;
+      font-size: 1.15rem;
     }
     .summary .value {
-      color: #DB4B3E;           /* červená barva pro čísla */
+      color: #DB4B3E;
+      font-size: 1.18rem;
     }
     .zpet-button {
-      background-color: #ffffff;
+      background: #fff;
       color: #0066b3;
-      font-weight: bold;
+      font-weight: 700;
       border: 2px solid #0066b3;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 16px;
+      border-radius: 10px;
+      padding: 9px 26px;
+      font-size: 1.07rem;
       cursor: pointer;
-      margin-top: 20px;
+      margin: 32px 0 0 0;
+      box-shadow: 0 2px 12px #00336018;
+      transition: background .18s, color .18s;
     }
     .zpet-button:hover {
-      background-color: #0066b3;
-      color: white;
+      background: #0066b3;
+      color: #fff;
+    }
+    @media (max-width: 1024px) {
+      .container { padding: 12px 2vw 20px 2vw; }
+      .zones-table { font-size: 1rem; }
+    }
+    @media (max-width: 700px) {
+      .container { max-width: 100vw; }
+      .zones-table input.zone-input-field { width: 95%; }
+      .summary { font-size: 1rem; }
     }
   </style>
 </head>
 <body>
-
+  <div class="header">
+    <h1 class="header-title">Rozdělení pracovníků</h1>
+  </div>
   <div class="container">
-    <h1>Rozdělení picking</h1>
-
-    <!-- Tabulka se zónami (bez hlavičky, pouze tělo) -->
     <table class="zones-table">
       <tbody id="zones-table-body">
-        <!-- Řádek 1: A1, A2, A3, A4 -->
         <tr>
           <td class="zone-label">A1</td>
           <td class="zone-result"><span id="res-A1">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-A1" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-A1" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">A2</td>
           <td class="zone-result"><span id="res-A2">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-A2" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-A2" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">A3</td>
           <td class="zone-result"><span id="res-A3">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-A3" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-A3" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">A4</td>
           <td class="zone-result"><span id="res-A4">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-A4" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-A4" class="zone-input-field" placeholder="ks"></td>
         </tr>
-        <!-- Řádek 2: B1, B2, B3, B4 -->
         <tr>
           <td class="zone-label">B1</td>
           <td class="zone-result"><span id="res-B1">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-B1" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-B1" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">B2</td>
           <td class="zone-result"><span id="res-B2">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-B2" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-B2" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">B3</td>
           <td class="zone-result"><span id="res-B3">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-B3" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-B3" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">B4</td>
           <td class="zone-result"><span id="res-B4">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-B4" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-B4" class="zone-input-field" placeholder="ks"></td>
         </tr>
-        <!-- Řádek 3: C1, C2, C3, C4 -->
         <tr>
           <td class="zone-label">C1</td>
           <td class="zone-result"><span id="res-C1">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-C1" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-C1" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">C2</td>
           <td class="zone-result"><span id="res-C2">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-C2" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-C2" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">C3</td>
           <td class="zone-result"><span id="res-C3">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-C3" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-C3" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">C4</td>
           <td class="zone-result"><span id="res-C4">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-C4" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-C4" class="zone-input-field" placeholder="ks"></td>
         </tr>
-        <!-- Řádek 4: D1, D2, D3, D4 -->
         <tr>
           <td class="zone-label">D1</td>
           <td class="zone-result"><span id="res-D1">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-D1" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-D1" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">D2</td>
           <td class="zone-result"><span id="res-D2">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-D2" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-D2" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">D3</td>
           <td class="zone-result"><span id="res-D3">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-D3" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-D3" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">D4</td>
           <td class="zone-result"><span id="res-D4">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-D4" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-D4" class="zone-input-field" placeholder="ks"></td>
         </tr>
-        <!-- Řádek 5: E1, E2, E3, E4 -->
         <tr>
           <td class="zone-label">E1</td>
           <td class="zone-result"><span id="res-E1">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-E1" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-E1" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">E2</td>
           <td class="zone-result"><span id="res-E2">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-E2" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-E2" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">E3</td>
           <td class="zone-result"><span id="res-E3">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-E3" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-E3" class="zone-input-field" placeholder="ks"></td>
           <td class="zone-label">E4</td>
           <td class="zone-result"><span id="res-E4">–</span></td>
-          <td class="zone-input">
-            <input type="number" min="0" id="zone-E4" class="zone-input-field" placeholder="ks">
-          </td>
+          <td class="zone-input"><input type="number" min="0" id="zone-E4" class="zone-input-field" placeholder="ks"></td>
         </tr>
       </tbody>
     </table>
 
-    <!-- Řádek s ovládacími prvky pod tabulkou -->
     <div class="control-row">
       <div class="input-group">
         <label for="total-workers">Pracovníků:</label>
@@ -298,14 +282,12 @@
       <button id="export-btn" onclick="exportData()">Export</button>
     </div>
 
-    <!-- Souhrn: jeden řádek, čísla červeně, text bílý -->
     <div class="summary">
       <p>Celkový počet kusů: <span id="total-items" class="value">–</span></p>
       <p>Celkový čas: <span id="time-required" class="value">–</span></p>
     </div>
   </div>
   <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
-
   <script>
     const zones = [
       'A1','A2','A3','A4',
