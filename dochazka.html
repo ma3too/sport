@@ -100,15 +100,12 @@
       background: #eaf1ff;
       color: #0066b3;
     }
-
-    /* --- Nové styly pro tlačítka v jednom řádku --- */
     .action-buttons {
       display: flex;
       gap: 15px;
       margin-top: 4px;
       flex-wrap: wrap;
     }
-    /* Tlačítko Zpět (bílé/modré) */
     .zpet-button {
       background-color: #ffffff;
       color: #0066b3;
@@ -124,8 +121,6 @@
       background-color: #0066b3;
       color: white;
     }
-
-    /* Tlačítko Exportovat (zelené) */
     .export-button {
       background-color: #1eec4e;
       color: #155520;
@@ -141,8 +136,6 @@
       background-color: #54ff79;
       transform: scale(1.04);
     }
-
-    /* Tlačítko Vymazat docházku (červené) */
     .delete-button {
       background-color: #ee3b33;
       color: #fff;
@@ -158,8 +151,6 @@
       background-color: #c82333;
       transform: scale(1.04);
     }
-    /* ---------------------------------------------- */
-
     .status {
       display: block;
       font-size: 15px;
@@ -192,7 +183,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 5px;
-      background: #2A64AD;
+      background: #0066b3;
       padding: 7px;
       border-radius: 10px;
       margin: 0 auto 8px auto;
@@ -321,18 +312,15 @@
       <!-- LEVÝ SLOUPEC -->
       <div class="left-column">
         <div>
-          <!-- Logo -->
           <div class="logo-container">
-          <img src="static/logo.png" alt="Sportisimo Logo" class="logo">
-        </div>
+            <img src="static/logo.png" alt="Sportisimo Logo" class="logo">
+          </div>
           <label for="datum">Datum:</label>
           <input type="date" id="datum">
         </div>
         <input id="barcode" type="text" autofocus autocomplete="off" placeholder="Skenuj ID..." />
         <div id="zprava" class="status"></div>
         <div id="stavZamestnancu" class="stav-zamestnancu"></div>
-        
-        <!-- Spojená tlačítka na jeden řádek -->
         <div class="action-buttons">
           <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
           <button onclick="exportovatDochazku()" class="export-button">Exportovat</button>
@@ -575,6 +563,7 @@
       }
     }
 
+    // OPRAVENÁ FUNKCE S BOM
     function exportovatDochazku() {
       const vybraneSmeny = [];
       if (filterA1) vybraneSmeny.push('A1');
@@ -613,7 +602,9 @@
         headers.join(";") + "\n" +
         exportData.map(row => row.map(val => `"${val}"`).join(";")).join("\n");
 
-      let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      // BOM pro kompatibilitu s Excel
+      const BOM = "\uFEFF";
+      let blob = new Blob([BOM + csvContent], { type: "text/csv;charset=utf-8;" });
       let url = URL.createObjectURL(blob);
       let a = document.createElement('a');
       a.href = url;
