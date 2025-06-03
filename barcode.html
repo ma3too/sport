@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8" />
-  <title>Code 128</title>
+  <title>Code 128 – Generátor</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
@@ -16,61 +16,92 @@
     .main-content {
       margin-top: 87px;
       display: inline-block;
+      width: 100%;
+      max-width: 98vw;
     }
     input {
-      padding: 10px;
-      font-size: 16px;
-      width: 315px;
-      margin: 10px 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      padding: 18px;
+      font-size: 2rem;
+      width: 95%;
+      max-width: 580px;
+      margin: 20px 5px 18px 5px;
+      border-radius: 9px;
+      border: 2px solid #ccc;
       font-family: 'Open Sans', sans-serif;
       box-sizing: border-box;
       display: block;
       margin-left: auto;
       margin-right: auto;
+      background: #fff;
+      color: #222;
+      font-weight: 600;
     }
     .button-row {
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
     button {
-      padding: 10px;
-      font-size: 14px;
-      width: 150px;
-      margin: 6px 5px;
-      border-radius: 5px;
+      padding: 16px 32px;
+      font-size: 1.3rem;
+      width: auto;
+      margin: 8px 8px;
+      border-radius: 8px;
       border: none;
       font-family: 'Open Sans', sans-serif;
       box-sizing: border-box;
       display: inline-block;
+      font-weight: bold;
+      transition: background 0.2s, transform 0.2s;
     }
     button.generate {
       background-color: #DB4B3E;
       color: white;
-      font-weight: bold;
     }
     button.download {
       background-color: #222222;
       color: #ffffff;
-      font-weight: bold;
     }
     button:hover {
-      transform: scale(1.03);
-      transition: all 0.2s ease;
+      transform: scale(1.04);
       cursor: pointer;
     }
-    svg#barcode {
+    .barcode-list {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 36px;
+      justify-content: center;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .barcode-block {
+      background: #fff;
+      padding: 18px 18px 10px 18px;
+      border-radius: 10px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 340px;
+      margin-bottom: 16px;
+      margin-top: 0;
+      max-width: 360px;
+    }
+    .barcode-block-label {
+      color: #0066b3;
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 1.15rem;
+      word-break: break-all;
+    }
+    svg.barcode {
+      margin-top: 4px;
       background: white;
-      padding: 10px;
-      margin-top: 26px;
       border-radius: 6px;
       display: block;
-      margin-left: auto;
-      margin-right: auto;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
     .zpet-button-wrapper {
-      margin-top: 60px;
+      margin-top: 50px;
       text-align: center;
       width: 100%;
     }
@@ -79,25 +110,52 @@
       color: #0066b3;
       font-weight: bold;
       border: 2px solid #0066b3;
-      border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 16px;
+      border-radius: 8px;
+      padding: 12px 30px;
+      font-size: 1.19rem;
       cursor: pointer;
+      transition: background .18s, color .18s;
     }
     .zpet-button:hover {
       background-color: #0066b3;
       color: white;
     }
+    @media (max-width: 1000px) {
+      .barcode-block {
+        min-width: 220px;
+        max-width: 260px;
+        padding: 10px 4vw;
+      }
+      .barcode-list {
+        gap: 20px;
+      }
+    }
+    @media (max-width: 650px) {
+      .barcode-list {
+        flex-direction: column;
+        align-items: center;
+      }
+      .barcode-block {
+        min-width: 80vw;
+        max-width: 95vw;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="main-content">
-    <input type="text" id="text" placeholder="Zde zadejte text...">
+    <input
+      type="text"
+      id="text"
+      placeholder="Zadej kód nebo více kódů oddělených středníkem (;)"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();generateBarcode();}"
+      autocomplete="off"
+    >
     <div class="button-row">
       <button class="generate" onclick="generateBarcode()">Generovat</button>
-      <button class="download" onclick="downloadSVG()">Stáhnout</button>
+      <button class="download" onclick="downloadAllSVGs()">Stáhnout vše</button>
     </div>
-    <svg id="barcode"></svg>
+    <div class="barcode-list" id="barcode-list"></div>
   </div>
 
   <div class="zpet-button-wrapper">
@@ -106,34 +164,67 @@
 
   <script>
     function generateBarcode() {
-      const value = document.getElementById("text").value;
+      const list = document.getElementById("barcode-list");
+      list.innerHTML = '';
+      const value = document.getElementById("text").value.trim();
+
       if (!value) {
         alert("Zadej text.");
         return;
       }
-      JsBarcode("#barcode", value, {
-        format: "CODE128",
-        width: 2,
-        height: 100,
-        displayValue: true,
-        lineColor: "#000",
-        background: "#fff"
+      const codes = value.split(";").map(s => s.trim()).filter(Boolean);
+      codes.forEach((code, i) => {
+        // blok pro každý kód
+        const block = document.createElement("div");
+        block.className = "barcode-block";
+
+        const label = document.createElement("div");
+        label.className = "barcode-block-label";
+        label.textContent = code;
+        block.appendChild(label);
+
+        // SVG pro čárový kód
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.classList.add("barcode");
+        svg.id = "barcode_" + i;
+        block.appendChild(svg);
+
+        list.appendChild(block);
+
+        JsBarcode(svg, code, {
+          format: "CODE128",
+          width: 2.3,
+          height: 115,
+          displayValue: true,
+          lineColor: "#000",
+          background: "#fff",
+          fontSize: 24,
+          textMargin: 5
+        });
       });
     }
 
-    function downloadSVG() {
-      const svg = document.getElementById("barcode");
-      const serializer = new XMLSerializer();
-      const source = serializer.serializeToString(svg);
-      const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "barcode.svg";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    function downloadAllSVGs() {
+      const blocks = document.querySelectorAll('.barcode-block');
+      if (blocks.length === 0) {
+        alert('Nejdříve vygeneruj alespoň jeden kód.');
+        return;
+      }
+      blocks.forEach((block, idx) => {
+        const svg = block.querySelector('svg');
+        const serializer = new XMLSerializer();
+        const source = serializer.serializeToString(svg);
+        const codeLabel = block.querySelector('.barcode-block-label').textContent || ('barcode_' + idx);
+        const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.download = (codeLabel.replace(/[^a-zA-Z0-9\-_\.]/g, '_')) + ".svg";
+        a.href = url;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
     }
   </script>
 </body>
