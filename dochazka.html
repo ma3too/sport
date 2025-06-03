@@ -424,31 +424,25 @@
           return;
         }
     
-        // ⬇️ Kontrola VEDOUCÍHO (TL) – UŽ NA ZAČÁTKU!
-        const ved = zamestnanci.find(z => z.kod === kod && z.funkce === "TL");
-        if (ved) {
+        // Najdi zaměstnance podle kódu (ať už je nebo není přítomen)
+        const zam = zamestnanci.find(z => z.kod === kod);
+    
+        // Pokud existuje a je TL (vedoucí), povol tlačítka vždy!
+        if (zam && zam.funkce === "TL") {
           jeVedouci = true;
+          zobrazTlacitka();
           zpravaDiv.textContent = "Přihlášení jako vedoucí (TL): rozšířené funkce povoleny.";
           zpravaDiv.className = "success status";
-          zobrazTlacitka();
-          barcodeInput.value = "";
-          // ⬇️ Zde je důležité **nevracet**, aby mohl být TL i zapsán.
-          // return;   // <-- tento řádek SMAŽ nebo ZAKOMENTUJ
-          // Pokud chceš, aby šlo zároveň TL zapsat jako přítomného, nech pokračovat dál
+          // NEVRACEJ! Pokračuj dál – klidně ho i zapiš.
         }
     
-        const zam = zamestnanci.find(z => z.kod === kod);
         if (!zam) {
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
           zpravaDiv.className = "error status";
         } else if (pritomni.some(p => p.kod === kod)) {
           zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
           zpravaDiv.className = "error status";
-          // ALE I TADY PROVEĎ zobrazTlacitka(), pokud je to TL!
-          if (zam.funkce === "TL") {
-            jeVedouci = true;
-            zobrazTlacitka();
-          }
+          // NEVRACEJ! Tlačítka už jsou povolená, pokud je to TL.
         } else {
           const ted = new Date();
           const casStr = formatTime(ted);
