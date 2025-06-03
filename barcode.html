@@ -87,13 +87,6 @@
       margin-bottom: 16px;
       margin-top: 0;
     }
-    .barcode-block-label {
-      color: #0066b3;
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 1.04rem;
-      word-break: break-all;
-    }
     svg.barcode {
       margin-top: 4px;
       background: white;
@@ -178,11 +171,6 @@
         const block = document.createElement("div");
         block.className = "barcode-block";
 
-        const label = document.createElement("div");
-        label.className = "barcode-block-label";
-        label.textContent = code;
-        block.appendChild(label);
-
         // SVG pro čárový kód
         const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.classList.add("barcode");
@@ -195,7 +183,7 @@
           format: "CODE128",
           width: 2.3,
           height: 90,
-          displayValue: true,
+          displayValue: true, // Text pod kódem
           lineColor: "#000",
           background: "#fff",
           fontSize: 18,
@@ -214,7 +202,7 @@
         const svg = block.querySelector('svg');
         const serializer = new XMLSerializer();
         const source = serializer.serializeToString(svg);
-        const codeLabel = block.querySelector('.barcode-block-label').textContent || ('barcode_' + idx);
+        const codeLabel = svg.querySelector('text')?.textContent || ('barcode_' + idx);
         const blob = new Blob([source], {type: "image/svg+xml;charset=utf-8"});
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
