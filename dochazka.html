@@ -131,7 +131,9 @@
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
       transition: background 0.18s, transform 0.14s;
+      display: none;
     }
+    .export-button.show { display: inline-block; }
     .export-button:hover {
       background-color: #54ff79;
       transform: scale(1.04);
@@ -146,7 +148,9 @@
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
       transition: background 0.18s, transform 0.14s;
+      display: none;
     }
+    .delete-button.show { display: inline-block; }
     .delete-button:hover {
       background-color: #c82333;
       transform: scale(1.04);
@@ -177,7 +181,7 @@
       margin-bottom: 15px;
       font-size: 1.3rem;
       color: #ffffff;
-      font-weight: 600;    
+      font-weight: 600;
     }
     .zamestnanci-grid {
       display: grid;
@@ -214,6 +218,11 @@
       font-weight: bold;
       border: 2px solid #155520;
     }
+    .pritomen-cell.agent {
+      background: #ffe066 !important;
+      color: #8a7200 !important;
+      border: 2px solid #b7a100 !important;
+    }
     .filter-buttons {
       display: flex;
       gap: 10px;
@@ -241,43 +250,6 @@
     .filter-btn:disabled {
       opacity: 1;
       cursor: default;
-    }
-    .export-table {
-      background: #fff;
-      color: #222;
-      border-radius: 14px;
-      margin: 25px auto 0 auto;
-      font-size: 16px;
-      width: 95%;
-      max-width: 920px;
-      border-collapse: collapse;
-      box-shadow: 0 2px 8px rgba(25, 56, 112, 0.2);
-      text-align: left;
-      overflow-x: auto;
-    }
-    .export-table th, .export-table td {
-      border: 1px solid #ccc;
-      padding: 9px 13px;
-    }
-    .export-table th {
-      background: #314b85;
-      color: #fff;
-      font-size: 15px;
-      font-weight: bold;
-    }
-    .export-table tr:nth-child(even) td {
-      background: #f7f7f7;
-    }
-    .export-table tr:nth-child(odd) td {
-      background: #fff;
-    }
-    .export-table .pritomen-ano {
-      background: #c8ffc8 !important;
-      font-weight: bold;
-    }
-    .export-table .pritomen-ne {
-      background: #ffe3e3 !important;
-      color: #a22 !important;
     }
     @media (max-width: 1100px) {
       .container { flex-direction: column; align-items: center; gap: 28px; }
@@ -323,8 +295,8 @@
         <div id="stavZamestnancu" class="stav-zamestnancu"></div>
         <div class="action-buttons">
           <button onclick="history.back()" class="zpet-button">⬅ Zpět</button>
-          <button onclick="exportovatDochazku()" class="export-button">Exportovat</button>
-          <button onclick="vymazatDochazku()" class="delete-button">Vymazat docházku</button>
+          <button id="exportBtn" onclick="exportovatDochazku()" class="export-button">Exportovat</button>
+          <button id="deleteBtn" onclick="vymazatDochazku()" class="delete-button">Vymazat docházku</button>
         </div>
       </div>
       <!-- PRAVÝ SLOUPEC -->
@@ -340,8 +312,15 @@
   </div>
 
   <script>
+    // Nastav zde kód vedoucího, případně přidej více do pole:
+    const VEDOUCI_KODY = ["vedouci123", "99999"]; // Zde zadej opravdové kódy vedoucích
+
+    let jeVedouci = false;
+
     const btnA1 = document.getElementById("btnA1");
     const btnA2 = document.getElementById("btnA2");
+    const exportBtn = document.getElementById("exportBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
 
     let filterA1 = true;
     let filterA2 = true;
@@ -424,6 +403,7 @@
       updateFilterButtons();
 
       await nacistZamestnanceZeSouboru();
+      zobrazTlacitka();
     });
 
     datumInput.addEventListener("change", function() {
@@ -446,6 +426,16 @@
           zpravaDiv.className = "error status";
           return;
         }
+        // Pokud zadal vedoucí kartu – zobrazí se tlačítka!
+        if (VEDOUCI_KODY.includes(kod)) {
+          jeVedouci = true;
+          zpravaDiv.textContent = "Přihlášení jako vedoucí: rozšířené funkce povoleny.";
+          zpravaDiv.className = "success status";
+          zobrazTlacitka();
+          barcodeInput.value = "";
+          return;
+        }
+
         const zam = zamestnanci.find(z => z.kod === kod);
         if (!zam) {
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
@@ -474,6 +464,16 @@
         barcodeInput.value = "";
       }
     });
+
+    function zobrazTlacitka() {
+      if (jeVedouci) {
+        exportBtn.classList.add('show');
+        deleteBtn.classList.add('show');
+      } else {
+        exportBtn.classList.remove('show');
+        deleteBtn.classList.remove('show');
+      }
+    }
 
     function updateFilterButtons() {
       if (filterA1) {
@@ -538,10 +538,18 @@
 
       let gridHTML = "";
       let pocetPritomnych = 0;
+      let pocetKmen = 0;
+      let pocetAgent = 0;
       zamList.forEach(zam => {
         const pr = pritomni.find(p => p.kod === zam.kod);
-        if (pr) pocetPritomnych++;
-        gridHTML += `<div class="zamestnanec-cell${pr ? ' pritomen-cell' : ''}">
+        if (pr) {
+          pocetPritomnych++;
+          if (zam.prac_pomer === "AGENT") pocetAgent++;
+          else pocetKmen++;
+        }
+        let cellClass = pr ? 'pritomen-cell' : '';
+        if (pr && zam.prac_pomer === "AGENT") cellClass += ' agent';
+        gridHTML += `<div class="zamestnanec-cell${cellClass ? ' ' + cellClass : ''}">
           <div>${zam.jmeno}</div>
           <div style="font-size:11px; opacity:0.8;">${zam.smena}</div>
           <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer}</div>
@@ -549,7 +557,7 @@
       });
 
       zamestnanciGrid.innerHTML = gridHTML;
-      countPr.textContent = `přítomní: ${pocetPritomnych}`;
+      countPr.textContent = `přítomní: ${pocetPritomnych} (${pocetKmen}/` + pocetAgent + `)`;
       countAll.textContent = zamList.length;
     }
 
@@ -563,7 +571,6 @@
       }
     }
 
-    // OPRAVENÁ FUNKCE S BOM
     function exportovatDochazku() {
       const vybraneSmeny = [];
       if (filterA1) vybraneSmeny.push('A1');
