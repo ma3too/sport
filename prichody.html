@@ -529,12 +529,11 @@
           zpravaDiv.className = "error status";
           return;
         }
-
-        const zam = zamestnanci.find(z => z.kod === kod);
+        const zam = zamestnanci.find(z => (z.id_card || "").trim() === kod);
         if (!zam) {
           zpravaDiv.textContent = "Zaměstnanec nenalezen!";
           zpravaDiv.className = "error status";
-        } else if (pritomni.some(p => p.kod === kod && !p.cas_odchodu)) {
+        } else if (pritomni.some(p => (p.id_card || "").trim() === kod && !p.cas_odchodu)) {
           zpravaDiv.textContent = zam.jmeno + " už je zapsán!";
           zpravaDiv.className = "error status";
         } else {
@@ -546,10 +545,9 @@
             pozice: zam.pozice,
             smena: zam.smena,
             prac_pomer: zam.prac_pomer,
-            kod: zam.kod,
+            id_card: zam.id_card,
             cas_prichodu: casStr,
-            cas_odchodu: "",
-            // funkce: zam.funkce // ZDE UŽ NENÍ!
+            cas_odchodu: ""
           };
           pritomni.push(zapis);
           ulozLocal('pritomni_' + vybraneDatum, pritomni);
@@ -608,7 +606,7 @@
 
     // --- ODCHOD JEDNOTLIVCE ---
     function odchodZamestnance(kod) {
-      let idx = pritomni.findIndex(p => p.kod === kod && !p.cas_odchodu);
+      let idx = pritomni.findIndex(p => (p.id_card || "").trim() === kod && !p.cas_odchodu);
       if (idx === -1) return;
       if (!confirm("Označit tohoto zaměstnance jako odešlého?")) return;
       pritomni[idx].cas_odchodu = formatTime(new Date());
@@ -638,7 +636,7 @@
       let pocetKmen = 0;
       let pocetAgent = 0;
       zamList.forEach(zam => {
-        const pr = pritomni.find(p => p.kod === zam.kod && !p.cas_odchodu);
+        const pr = pritomni.find(p => (p.id_card || "").trim() === (zam.id_card || "").trim() && !p.cas_odchodu);
         let cellClass = pr ? 'pritomen-cell' : '';
         if (pr && zam.prac_pomer === "AGENT") cellClass += ' agent';
         if (pr) {
@@ -650,7 +648,7 @@
           <div>${zam.jmeno}</div>
           <div style="font-size:11px; opacity:0.8;">${zam.smena || ""}${zam.pozice ? ', ' + zam.pozice : ''}</div>
           <div style="font-size:11px; opacity:0.6;">${zam.prac_pomer || ""}</div>
-          ${(jeVedouci && pr) ? `<button class="odchod-btn" onclick="odchodZamestnance('${zam.kod}')">Odchod</button>` : ""}
+          ${(jeVedouci && pr) ? `<button class="odchod-btn" onclick="odchodZamestnance('${zam.id_card}')">Odchod</button>` : ""}
         </div>`;
       });
 
@@ -675,14 +673,14 @@
         .sort((a, b) => a.jmeno.localeCompare(b.jmeno, 'cs'));
 
       let exportData = exportList.map(zam => {
-        let pr = pritomni.find(p => p.kod === zam.kod);
+        let pr = pritomni.find(p => (p.id_card || "").trim() === (zam.id_card || "").trim());
         return [
           zam.os_cislo,
           zam.jmeno,
           zam.pozice,
           zam.smena,
           zam.prac_pomer,
-          zam.kod,
+          zam.id_card,
           pr ? pr.cas_prichodu : "",
           pr ? pr.cas_odchodu || "" : "",
           pr ? "ano" : "ne"
@@ -695,7 +693,7 @@
         "Pozice",
         "Směna",
         "Pracovní poměr",
-        "Kód",
+        "ID Card",
         "Čas příchodu",
         "Čas odchodu",
         "Přítomen"
