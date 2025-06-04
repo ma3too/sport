@@ -49,10 +49,20 @@
       color: #111;
       padding: 10px;
       border-radius: 8px;
-      max-width: 400px;
+      max-width: 200px;
       margin: 15px auto;
-      font-size: 1rem;
+      font-size: 0.95rem;
       text-align: left;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .added-codes button {
+      background: none;
+      color: red;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
     }
 
     .print-area-wrap {
@@ -181,7 +191,7 @@
     function refreshCodes() {
       let html = '';
       allCodes.forEach((c, i) => {
-        html += c + ' <button onclick="deleteCode(' + i + ')">✕</button><br>';
+        html += `<div>${c} <button onclick="deleteCode(${i})">✕</button></div>`;
       });
       document.getElementById('added-codes').innerHTML = html || '<i>Žádné kódy zatím nejsou.</i>';
     }
