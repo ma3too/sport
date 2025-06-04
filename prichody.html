@@ -638,7 +638,15 @@
       });
 
       const nepocet = zamList.length - pocetPritomnych;
-      countPr.innerHTML = `přítomní: <strong>${pocetPritomnych}</strong> (<strong>${pocetKmen} KMEN</strong> / <strong>${pocetAgent} AGENT</strong>) / <strong>${zamList.length}</strong>, <span style="color:#ee3b33">nepřítomní: <strong>${nepocet}</strong></span>`;
+      countPr.innerHTML = `přítomní: <strong>${pocetPritomnych}</strong> (
+        <strong style="color:#71b7fb; font-weight:600; letter-spacing:0.08em; text-transform:lowercase;">
+          ${pocetKmen} kmen
+        </strong> /
+        <strong style="color:#71b7fb; font-weight:600; letter-spacing:0.08em; text-transform:lowercase;">
+          ${pocetAgent} agentura
+        </strong>
+      ) / <strong>${zamList.length}</strong>,
+      <span style="color:#ee3b33">nepřítomní: <strong>${nepocet}</strong></span>`;
       zamestnanciGrid.innerHTML = gridHTML;
     }
 
