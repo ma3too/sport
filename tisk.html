@@ -2,130 +2,143 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Štítky – generátor (3 EANy pod sebou)</title>
+  <title>Generátor štítků – 3 EANy blok</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
     body {
       background: #0066b3;
       font-family: 'Open Sans', sans-serif;
       color: white;
       text-align: center;
+      margin: 0;
+      padding: 0;
     }
+
     .main-content {
-      margin: 60px auto 0;
-      width: 97vw;
-      max-width: 650px;
-      background: rgba(255,255,255,0.09);
-      border-radius: 18px;
-      padding: 26px 18px 36px 18px;
+      margin: 30px auto;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 16px;
+      width: 96%;
+      max-width: 700px;
     }
+
     .row {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 16px;
       justify-content: center;
-      width: 100%;
+      gap: 14px;
+      margin-bottom: 12px;
     }
-    label {
-      font-size: 1.08rem;
-      font-weight: 600;
-      min-width: 60px;
-    }
+
     input, select {
-      padding: 7px 12px;
-      font-size: 1.03rem;
+      padding: 6px 10px;
+      font-size: 1rem;
       border-radius: 6px;
-      border: 1px solid #bbb;
-      background: #fff;
-      color: #222;
+      border: 1px solid #ccc;
     }
+
+    label {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
     .added-codes {
       background: #fff;
-      color: #223;
-      border-radius: 8px;
-      margin: 18px auto 0;
-      max-width: 400px;
-      min-height: 36px;
-      text-align: left;
-      padding: 9px 14px;
-      font-size: 1.07rem;
-    }
-    .print-area-wrap {
-      margin: 32px auto 0;
-      max-width: 98vw;
-      overflow: auto;
-      background: #fff;
-      padding: 8px;
-      border-radius: 10px;
-      color: #222;
-    }
-    .print-label {
-      background: #fff;
-      border-radius: 7px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      color: #111;
       padding: 10px;
+      border-radius: 8px;
+      max-width: 400px;
+      margin: 15px auto;
+      font-size: 1rem;
+      text-align: left;
+    }
+
+    .print-area-wrap {
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px;
+      max-width: 98vw;
+    }
+
+    .print-label {
+      width: 95mm;
+      height: 105mm;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: space-around;
+      page-break-after: always;
+      border: 1px dashed #999;
+      padding: 5mm;
     }
+
     .ean-segment {
+      width: 80mm;
+      height: 35mm;
+      border: 1px solid #000;
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 10px;
+      justify-content: center;
+      box-sizing: border-box;
     }
+
     .bar-text {
-      font-size: 1.1rem;
-      font-family: 'Open Sans', monospace;
-      margin-top: 4px;
+      font-size: 1.05rem;
+      font-family: monospace;
+      margin-top: 2mm;
     }
+
     button {
-      margin: 12px 7px 0 0;
-      padding: 9px 24px;
-      font-size: 1.07rem;
-      border-radius: 7px;
-      border: none;
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
       background: #DB4B3E;
-      color: #fff;
-      font-weight: 600;
+      color: white;
+      border: none;
       cursor: pointer;
     }
+
+    @page {
+      size: 95mm 105mm;
+      margin: 0;
+    }
+
     @media print {
       body * { visibility: hidden !important; }
       .print-area-wrap, .print-area-wrap * { visibility: visible !important; }
       .print-area-wrap {
-        position: absolute !important;
-        left: 0; top: 0;
-        width: 100vw !important;
-        height: 100vh !important;
-        background: #fff !important;
-        margin: 0 !important; padding: 0 !important;
-        box-shadow: none !important; border-radius: 0 !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 95mm;
+        height: 105mm;
+        background: white;
+        margin: 0;
+        padding: 0;
       }
-      .main-content, .btn-row { display: none !important; }
+      .main-content { display: none !important; }
     }
   </style>
 </head>
 <body>
   <div class="main-content">
-    <label style="font-size:1.13em; margin-bottom:9px; display:inline-block;">Ruční generování štítků</label>
+    <h2>Generátor 3 štítků do bloku</h2>
     <form onsubmit="event.preventDefault(); addCodes();">
       <div class="row">
         <label for="zona">Zóna</label>
-        <input id="zona" type="text" value="PTA" style="width:54px;">
+        <input id="zona" type="text" value="PTA" style="width:60px;">
         <label for="ulicka">Ulička</label>
-        <input id="ulicka" type="text" value="003" style="width:54px;">
-      </div>
-      <div class="row">
+        <input id="ulicka" type="text" value="001" style="width:60px;">
         <label for="radaOd">Řada</label>
-      </div>
-      <div class="row">
-        <input id="radaOd" type="text" value="01" style="width:44px;" title="Řada od">
-        <span style="margin: 0 3px;">až</span>
-        <input id="radaDo" type="text" value="20" style="width:44px;" title="Řada do">
+        <input id="radaOd" type="text" value="01" style="width:50px;">
+        <span>až</span>
+        <input id="radaDo" type="text" value="20" style="width:50px;">
         <label><input type="radio" name="typRady" value="all" checked> vše</label>
         <label><input type="radio" name="typRady" value="even"> sudé</label>
         <label><input type="radio" name="typRady" value="odd"> liché</label>
@@ -139,26 +152,20 @@
           <option value="32">32</option>
           <option value="41">41</option>
         </select>
-      
         <label style="margin-left:20px;">Typ:</label>
         <label><input type="checkbox" class="typ" value="L" checked> L</label>
         <label><input type="checkbox" class="typ" value="A"> A</label>
         <label><input type="checkbox" class="typ" value="B"> B</label>
-      
-        <button type="submit" style="margin-left:15px;">Přidat kombinace</button>
+        <button type="submit">Přidat</button>
       </div>
-
     </form>
 
     <div class="added-codes" id="added-codes"></div>
-
-    <div class="btn-row">
-      <button onclick="generateLabels()">Generovat štítky</button>
-      <button style="background:#333;" onclick="printLabels()">Tisknout</button>
-    </div>
+    <button onclick="generateLabels()">Generovat štítky</button>
+    <button onclick="printLabels()" style="background:#333;">Tisknout</button>
   </div>
 
-  <div id="print-area" class="print-area-wrap" style="display:none"></div>
+  <div id="print-area" class="print-area-wrap" style="display:none;"></div>
 
   <script>
     let allCodes = [];
@@ -168,19 +175,20 @@
       allCodes.forEach((c, i) => {
         html += c + ' <button onclick="deleteCode(' + i + ')">✕</button><br>';
       });
-      document.getElementById('added-codes').innerHTML = html || '<i>Nejsou přidané žádné kódy.</i>';
+      document.getElementById('added-codes').innerHTML = html || '<i>Žádné kódy zatím nejsou.</i>';
     }
 
     function addCodes() {
       const zona = document.getElementById('zona').value.trim();
       const ulicka = document.getElementById('ulicka').value.trim();
       const patro = document.getElementById('patro').value.trim();
-      const radaOd = parseInt(document.getElementById('radaOd').value,10);
-      const radaDo = parseInt(document.getElementById('radaDo').value,10);
+      const radaOd = parseInt(document.getElementById('radaOd').value, 10);
+      const radaDo = parseInt(document.getElementById('radaDo').value, 10);
       const typRady = document.querySelector('input[name="typRady"]:checked').value;
+      const typy = Array.from(document.querySelectorAll('.typ:checked')).map(x => x.value);
 
-      if (!zona || !ulicka || isNaN(radaOd) || isNaN(radaDo) || !patro) {
-        alert("Vyplň všechna pole.");
+      if (!zona || !ulicka || isNaN(radaOd) || isNaN(radaDo) || !patro || typy.length === 0) {
+        alert("Vyplň všechna pole a zvol typ pozice.");
         return;
       }
 
@@ -188,7 +196,6 @@
         if (typRady === "even" && r % 2 !== 0) continue;
         if (typRady === "odd" && r % 2 === 0) continue;
         let rStr = r.toString().padStart(2, "0");
-        const typy = Array.from(document.querySelectorAll('.typ:checked')).map(x => x.value);
         typy.forEach(t => {
           let kod = `${zona}-${ulicka}-${rStr}-${patro}-${t}`;
           allCodes.push(kod);
@@ -197,8 +204,8 @@
       refreshCodes();
     }
 
-    function deleteCode(idx) {
-      allCodes.splice(idx, 1);
+    function deleteCode(i) {
+      allCodes.splice(i, 1);
       refreshCodes();
     }
 
@@ -207,49 +214,41 @@
     }
 
     function generateLabels() {
-      const perLabel = 3;
-      const labelW = 104;
-      const labelH = 76;
-      const bcW = 90;
-      const bcH = 18;
-
-      let codes = [...allCodes];
-      let labels = [];
-      for (let i = 0; i < codes.length; i += perLabel)
-        labels.push(codes.slice(i, i + perLabel));
-
       const printArea = document.getElementById('print-area');
       printArea.innerHTML = '';
       printArea.style.display = 'block';
 
-      labels.forEach(group => {
+      const perBlock = 3;
+      const blocks = [];
+      for (let i = 0; i < allCodes.length; i += perBlock) {
+        blocks.push(allCodes.slice(i, i + perBlock));
+      }
+
+      blocks.forEach(group => {
         const labelDiv = document.createElement('div');
         labelDiv.className = 'print-label';
-        labelDiv.style.width = mmToPx(labelW) + 'px';
-        labelDiv.style.height = mmToPx(labelH) + 'px';
 
         group.forEach(code => {
-          const ean = code.replace(/-/g, '');
           const segment = document.createElement('div');
           segment.className = 'ean-segment';
 
           const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          svg.setAttribute('width', mmToPx(bcW));
-          svg.setAttribute('height', mmToPx(bcH));
-          JsBarcode(svg, ean, {
+          svg.setAttribute('width', mmToPx(72));
+          svg.setAttribute('height', mmToPx(14));
+          JsBarcode(svg, code.replace(/-/g, ""), {
             format: "CODE128",
-            width: Math.max(2, mmToPx(bcW)/60),
-            height: mmToPx(bcH)-6,
-            margin: 0,
-            displayValue: false
+            width: 2,
+            height: mmToPx(14) - 6,
+            displayValue: false,
+            margin: 0
           });
-          segment.appendChild(svg);
 
           const textDiv = document.createElement('div');
           textDiv.className = 'bar-text';
           textDiv.textContent = code;
-          segment.appendChild(textDiv);
 
+          segment.appendChild(svg);
+          segment.appendChild(textDiv);
           labelDiv.appendChild(segment);
         });
 
@@ -260,9 +259,8 @@
     }
 
     function printLabels() {
-      const printArea = document.getElementById('print-area');
-      if (!printArea || printArea.innerHTML.trim() === '') {
-        alert("Nejdříve vytvoř štítky.");
+      if (document.getElementById('print-area').innerHTML.trim() === '') {
+        alert("Nejdřív vygeneruj štítky.");
         return;
       }
       window.print();
