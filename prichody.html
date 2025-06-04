@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Docházka</title>
+  <title>Příchody</title>
   <link rel="icon" type="image/png" href="static/logo.png"> <!-- Favicon -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -336,7 +336,7 @@
 </head>
 <body>
   <div class="center-wrap">
-    <h1>Docházka</h1>
+    <h1>Příchody</h1>
     <div class="container">
       <!-- LEVÝ SLOUPEC -->
       <div class="left-column">
@@ -621,7 +621,7 @@
     function zobrazZamestnance() {
       if (zamestnanci.length === 0) {
         zamestnanciGrid.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#fff;'>Seznam zaměstnanců je prázdný nebo se načítá.</div>";
-        countPr.innerHTML = `přítomní: <strong>0</strong> (<strong>0 KMEN</strong> / <strong>0 AGENT</strong>) / <strong>0</strong>, <span style="color:#ee3b33">nepřítomní: <strong>0</strong></span>`;
+        countPr.innerHTML = `přítomní: <strong>0</strong> (<strong>0 kmenových</strong> / <strong>0 agenturních</strong>) / <strong>0</strong>, <span style="color:#ee3b33">nepřítomní: <strong>0</strong></span>`;
         return;
       }
 
