@@ -7,35 +7,127 @@
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" rel="stylesheet">
   <style>
     body { background: #0066b3; font-family: 'Open Sans',sans-serif; color: white; text-align: center; }
-    .main-content { margin: 60px auto 0; width: 97vw; max-width: 650px; background: rgba(255,255,255,0.09); border-radius: 18px; padding: 26px 18px 36px 18px; }
-    .form-row {
-      display: flex; flex-wrap: wrap; align-items: center; gap: 15px; margin-bottom: 18px; justify-content: center;
+    .main-content {
+      margin: 60px auto 0;
+      width: 97vw;
+      max-width: 650px;
+      background: rgba(255,255,255,0.09);
+      border-radius: 18px;
+      padding: 26px 18px 36px 18px;
     }
-    .form-row label {
-      font-size: 1.08rem; font-weight: 600; margin-right: 6px; min-width: 66px; text-align: right;
+    .form-flex {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+      align-items: center;
+      margin-bottom: 20px;
     }
-    .form-row input[type="text"], .form-row input[type="number"] {
-      padding: 7px 12px; font-size: 1.03rem; border-radius: 6px; border: 1.1px solid #bbb; font-family: 'Open Sans', sans-serif; background: #fff; color: #222; font-weight: 400; margin-right: 6px; width: 65px;
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+      width: 100%;
     }
-    .form-row .rada-box { display: flex; align-items: center; gap: 4px;}
-    .form-row .pozice-box label {
-      font-weight: 400; margin-right: 12px; margin-left: 0;
+    .row label {
+      font-size: 1.08rem;
+      font-weight: 600;
+      margin-right: 6px;
+      min-width: 56px;
+      text-align: right;
     }
-    .checkbox { transform: scale(1.18); margin-right: 2px; }
-    .added-codes { background: #fff; color: #223; border-radius: 8px; margin: 18px auto 0; max-width: 400px; min-height: 36px; text-align: left; padding: 9px 14px; font-size: 1.07rem; }
-    .print-area-wrap { margin: 32px auto 0; max-width: 98vw; overflow: auto; background: #fff; padding: 8px; border-radius: 10px; color: #222; }
-    .print-labels-grid { display: flex; flex-direction: column; gap: 10px; align-items: flex-start;}
+    .row input[type="text"], .row input[type="number"] {
+      padding: 7px 12px;
+      font-size: 1.03rem;
+      border-radius: 6px;
+      border: 1.1px solid #bbb;
+      font-family: 'Open Sans', sans-serif;
+      background: #fff;
+      color: #222;
+      font-weight: 400;
+      width: 65px;
+      margin-right: 4px;
+    }
+    .rada-box {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .rada-radio {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 5px;
+    }
+    .pozice-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 10px;
+    }
+    .pozice-box label {
+      font-weight: 400;
+      margin: 0;
+      min-width: 19px;
+    }
+    .checkbox {
+      transform: scale(1.18);
+      margin-right: 2px;
+    }
+    .added-codes {
+      background: #fff;
+      color: #223;
+      border-radius: 8px;
+      margin: 18px auto 0;
+      max-width: 400px;
+      min-height: 36px;
+      text-align: left;
+      padding: 9px 14px;
+      font-size: 1.07rem;
+    }
+    .print-area-wrap {
+      margin: 32px auto 0;
+      max-width: 98vw;
+      overflow: auto;
+      background: #fff;
+      padding: 8px;
+      border-radius: 10px;
+      color: #222;
+    }
+    .print-labels-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+    }
     .print-label {
-      background: #fff; border-radius: 7px; box-shadow: 0 2px 8px rgba(0,0,0,0.09); padding: 10px 16px 10px 16px; margin: 2px 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0px;
+      background: #fff;
+      border-radius: 7px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.09);
+      padding: 10px 16px 10px 16px;
+      margin: 2px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0px;
     }
     .ean-segment { display: flex; flex-direction: column; align-items: center; width: 100%; }
     .bar-text { margin-top: 2px; font-size: 1.12rem; letter-spacing: 2px; font-family: 'Open Sans', monospace, monospace; }
     .divider { border-bottom: 1px dashed #bbb; width: 98%; margin: 7px 0 7px 0; }
     .btn-row { margin-top: 18px; }
     button {
-      margin: 6px 7px 0 0; padding: 9px 24px; font-size: 1.07rem; border-radius: 7px; border: none;
-      background: #DB4B3E; color: #fff; font-weight: 600; cursor: pointer; transition: background 0.17s, transform 0.18s;
+      margin: 6px 7px 0 0;
+      padding: 9px 24px;
+      font-size: 1.07rem;
+      border-radius: 7px;
+      border: none;
+      background: #DB4B3E;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.17s, transform 0.18s;
     }
     button:hover { background: #b43a2e; transform: scale(1.03);}
     .del-btn { background: #c2c2c2; color: #444; font-size: .93rem; padding: 3px 10px; margin-left: 8px;}
@@ -54,35 +146,41 @@
 <body>
   <div class="main-content">
     <label style="font-size:1.13em; margin-bottom:9px; display:inline-block;">Ruční generování štítků – rozsahy a pozice:</label>
-    <form class="form-row" onsubmit="event.preventDefault(); addCodes();">
-      <label for="zona">Zóna</label>
-      <input id="zona" type="text" value="PTA" style="width:54px;">
-      <label for="ulicka">Ulička</label>
-      <input id="ulicka" type="text" value="001" style="width:54px;">
-      <label for="radaOd">Řada</label>
-      <div class="rada-box">
-        <input id="radaOd" type="text" value="00" style="width:44px;" title="Řada od">
-        <span style="margin: 0 3px;">až</span>
-        <input id="radaDo" type="text" value="20" style="width:44px;" title="Řada do">
-        <label style="font-size: 1em; font-weight:400; margin:0 3px;">
-          <input type="radio" name="typRady" value="all" checked>vše
-        </label>
-        <label style="font-size: 1em; font-weight:400; margin:0 3px;">
-          <input type="radio" name="typRady" value="even">sudé
-        </label>
-        <label style="font-size: 1em; font-weight:400; margin:0 3px;">
-          <input type="radio" name="typRady" value="odd">liché
-        </label>
+    <form class="form-flex" onsubmit="event.preventDefault(); addCodes();">
+      <div class="row">
+        <label for="zona">Zóna</label>
+        <input id="zona" type="text" value="PTA" style="width:54px;">
+        <label for="ulicka">Ulička</label>
+        <input id="ulicka" type="text" value="001" style="width:54px;">
+        <label for="radaOd">Řada</label>
+        <div class="rada-box">
+          <input id="radaOd" type="text" value="00" style="width:44px;" title="Řada od">
+          <span style="margin: 0 3px;">až</span>
+          <input id="radaDo" type="text" value="20" style="width:44px;" title="Řada do">
+          <div class="rada-radio">
+            <label style="font-size: 1em; font-weight:400;">
+              <input type="radio" name="typRady" value="all" checked>vše
+            </label>
+            <label style="font-size: 1em; font-weight:400;">
+              <input type="radio" name="typRady" value="even">sudé
+            </label>
+            <label style="font-size: 1em; font-weight:400;">
+              <input type="radio" name="typRady" value="odd">liché
+            </label>
+          </div>
+        </div>
       </div>
-      <label for="patro">Pozice</label>
-      <input id="patro" type="text" value="01" style="width:42px;">
-      <div class="pozice-box" style="margin-left:9px;">
-        <label><input type="checkbox" class="checkbox pozice" value="X" checked>X</label>
-        <label><input type="checkbox" class="checkbox pozice" value="L">L</label>
-        <label><input type="checkbox" class="checkbox pozice" value="A">A</label>
-        <label><input type="checkbox" class="checkbox pozice" value="B">B</label>
+      <div class="row">
+        <label for="patro">Pozice</label>
+        <input id="patro" type="text" value="01" style="width:42px;">
+        <div class="pozice-box">
+          <label><input type="checkbox" class="checkbox pozice" value="X" checked>X</label>
+          <label><input type="checkbox" class="checkbox pozice" value="L">L</label>
+          <label><input type="checkbox" class="checkbox pozice" value="A">A</label>
+          <label><input type="checkbox" class="checkbox pozice" value="B">B</label>
+        </div>
+        <button type="submit" style="margin-left: 15px; margin-top: 0;">Přidat kombinace</button>
       </div>
-      <button type="submit" style="margin-left: 12px;">Přidat kombinace</button>
     </form>
 
     <div class="added-codes" id="added-codes"></div>
