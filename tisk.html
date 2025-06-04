@@ -2,10 +2,13 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Generátor štítků – PDF Export</title>
+  <title>Generátor štítků – Otočené EANy PDF</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
+    :root {
+      --ean-font-size: 1.1rem;
+    }
     body {
       background: #0066b3;
       color: white;
@@ -56,7 +59,6 @@
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0;
-      /*overflow: hidden;*/
     }
     .pdf-page {
       width: 145mm;
@@ -78,30 +80,46 @@
       justify-content: center;
       position: relative;
       background: #fff;
+      /* Otočení obsahu štítku */
+      transform: rotate(90deg);
+      /* Posunutí obsahu doprava na střed řádku */
+      transform-origin: left top;
+      margin-left: 35mm; /* posun tak, aby byl štítek ve "svém" řádku */
     }
     .ean-block:not(:last-child)::after {
       content: "";
       position: absolute;
-      bottom: 0;
+      bottom: -1.2mm;
       left: 5%;
       width: 90%;
       border-bottom: 1px solid black;
+      transform: rotate(-90deg); /* aby linka nebyla otočená */
     }
     svg {
       margin: 0;
       background: #fff;
+      display: block;
     }
     .ean-text {
       margin-top: 3mm;
       color: black;
       font-family: monospace;
-      font-size: 1rem;
+      font-size: var(--ean-font-size);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(-180deg); /* pro svislé čtení vpravo */
+      margin-bottom: 2mm;
+    }
+    /* Skrytí bílých mezer okolo svg při PDF exportu */
+    @media print {
+      body { background: white; }
+      #labels-preview { box-shadow: none; }
     }
   </style>
 </head>
 <body>
   <div class="main-content">
-    <h2>Generátor štítků (4 na stránku – PDF)</h2>
+    <h2>Generátor štítků (4 na stránku, otočené – PDF)</h2>
     <form id="genForm" onsubmit="event.preventDefault(); generateLabels();">
       <div class="row">
         <label for="zona">Zóna</label>
@@ -133,13 +151,23 @@
       </div>
     </form>
     <button onclick="exportToPDF()" id="exportBtn" style="display:none;">Exportovat do PDF</button>
+    <br><br>
+    <label for="fontSizeSel">Velikost textu pod EAN:</label>
+    <select id="fontSizeSel" onchange="setFontSize(this.value)">
+      <option value="1rem">Malá</option>
+      <option value="1.1rem" selected>Standard</option>
+      <option value="1.3rem">Větší</option>
+      <option value="1.5rem">Největší</option>
+    </select>
   </div>
   <div id="labels-preview"></div>
   <script>
     function mmToPx(mm) {
       return mm * (96 / 25.4);
     }
-
+    function setFontSize(val) {
+      document.documentElement.style.setProperty('--ean-font-size', val);
+    }
     function generateAllCodes() {
       const zona = document.getElementById('zona').value.trim();
       const ulicka = document.getElementById('ulicka').value.trim();
@@ -165,14 +193,11 @@
       }
       return codes;
     }
-
     function generateLabels() {
       const codes = generateAllCodes();
       if (!codes.length) return;
-
       const container = document.getElementById("labels-preview");
       container.innerHTML = "";
-
       for (let i = 0; i < codes.length; i += 4) {
         const page = document.createElement("div");
         page.className = "pdf-page";
@@ -198,10 +223,8 @@
         container.appendChild(page);
       }
       document.getElementById('exportBtn').style.display = 'inline-block';
-      // posunout stránku dolů k náhledu
       setTimeout(() => window.scrollTo(0,document.body.scrollHeight), 200);
     }
-
     function exportToPDF() {
       const container = document.getElementById("labels-preview");
       if (!container.innerHTML.trim()) {
