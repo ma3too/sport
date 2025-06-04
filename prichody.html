@@ -3,10 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Příchody</title>
-  <link rel="icon" type="image/png" href="static/logo.png"> <!-- Favicon -->
+  <link rel="icon" type="image/png" href="static/logo.png">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* --- ZACHOVÁNY VŠECHNY PŮVODNÍ STYLY --- */
     body {
       font-family: 'Open Sans', Arial, sans-serif;
       background-color: #0066b3;
@@ -269,7 +268,6 @@
       opacity: 1;
       cursor: default;
     }
-    /* --- ADMIN button & MODAL --- */
     .admin-btn {
       background: #eee;
       color: #2A64AD;
@@ -360,6 +358,7 @@
       <!-- PRAVÝ SLOUPEC -->
       <div class="right-column">
         <div class="filter-buttons">
+          <button id="btnA" class="filter-btn active">A</button>
           <button id="btnA1" class="filter-btn active">A1</button>
           <button id="btnA2" class="filter-btn active">A2</button>
         </div>
@@ -424,6 +423,7 @@
     });
 
     // --- Docházka logika ---
+    let filterA = true;
     let filterA1 = true;
     let filterA2 = true;
 
@@ -458,6 +458,7 @@
     let pritomni = [];
     let vybraneDatum = "";
 
+    const btnA  = document.getElementById("btnA");
     const btnA1 = document.getElementById("btnA1");
     const btnA2 = document.getElementById("btnA2");
     const barcodeInput = document.getElementById("barcode");
@@ -500,6 +501,7 @@
 
       const ulozSmeny = nacistLocal('aktivniSmeny');
       if (Array.isArray(ulozSmeny) && ulozSmeny.length > 0) {
+        filterA  = ulozSmeny.includes('A');
         filterA1 = ulozSmeny.includes('A1');
         filterA2 = ulozSmeny.includes('A2');
       }
@@ -560,49 +562,23 @@
     });
 
     function updateFilterButtons() {
-      if (filterA1) {
-        btnA1.classList.add("active");
-        btnA1.classList.remove("inactive");
-      } else {
-        btnA1.classList.add("inactive");
-        btnA1.classList.remove("active");
+      function setBtn(btn, active) {
+        if (active) { btn.classList.add("active"); btn.classList.remove("inactive"); }
+        else { btn.classList.add("inactive"); btn.classList.remove("active"); }
       }
-      btnA1.disabled = (filterA2 === false);
-
-      if (filterA2) {
-        btnA2.classList.add("active");
-        btnA2.classList.remove("inactive");
-      } else {
-        btnA2.classList.add("inactive");
-        btnA2.classList.remove("active");
-      }
-      btnA2.disabled = (filterA1 === false);
-
+      setBtn(btnA,  filterA);
+      setBtn(btnA1, filterA1);
+      setBtn(btnA2, filterA2);
       ulozLocal('aktivniSmeny', [
+        ...(filterA  ? ['A']  : []),
         ...(filterA1 ? ['A1'] : []),
         ...(filterA2 ? ['A2'] : [])
       ]);
     }
 
-    btnA1.addEventListener("click", function() {
-      if (filterA1 && filterA2) {
-        filterA1 = false;
-      } else if (!filterA1 && filterA2) {
-        filterA1 = true;
-      }
-      updateFilterButtons();
-      zobrazZamestnance();
-    });
-
-    btnA2.addEventListener("click", function() {
-      if (filterA1 && filterA2) {
-        filterA2 = false;
-      } else if (filterA1 && !filterA2) {
-        filterA2 = true;
-      }
-      updateFilterButtons();
-      zobrazZamestnance();
-    });
+    btnA.addEventListener("click", function()   { filterA  = !filterA;  updateFilterButtons(); zobrazZamestnance(); });
+    btnA1.addEventListener("click", function() { filterA1 = !filterA1; updateFilterButtons(); zobrazZamestnance(); });
+    btnA2.addEventListener("click", function() { filterA2 = !filterA2; updateFilterButtons(); zobrazZamestnance(); });
 
     // --- ODCHOD JEDNOTLIVCE ---
     function odchodZamestnance(kod) {
@@ -624,6 +600,7 @@
       }
 
       const vybraneSmeny = [];
+      if (filterA)  vybraneSmeny.push('A');
       if (filterA1) vybraneSmeny.push('A1');
       if (filterA2) vybraneSmeny.push('A2');
 
