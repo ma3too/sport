@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Generátor štítků – 3 EANy blok</title>
+  <title>Generátor štítků – otočený tisk</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <style>
     body {
@@ -64,8 +64,10 @@
     }
 
     .print-label {
-      width: 95mm;
-      height: 105mm;
+      width: 105mm;
+      height: 95mm;
+      transform: rotate(90deg);
+      transform-origin: top left;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
@@ -88,6 +90,7 @@
     }
 
     .bar-text {
+      color: #000 !important;
       font-size: 1.05rem;
       font-family: monospace;
       margin-top: 2mm;
@@ -105,19 +108,24 @@
     }
 
     @page {
-      size: 95mm 105mm;
+      size: 105mm 95mm;
       margin: 0;
     }
 
     @media print {
+      body, .bar-text, .ean-segment {
+        color: #000 !important;
+      }
       body * { visibility: hidden !important; }
-      .print-area-wrap, .print-area-wrap * { visibility: visible !important; }
+      .print-area-wrap, .print-area-wrap * {
+        visibility: visible !important;
+      }
       .print-area-wrap {
         position: absolute;
         left: 0;
         top: 0;
-        width: 95mm;
-        height: 105mm;
+        width: 105mm;
+        height: 95mm;
         background: white;
         margin: 0;
         padding: 0;
