@@ -139,8 +139,15 @@
           <option value="32">32</option>
           <option value="41">41</option>
         </select>
-        <button type="submit">Přidat kombinace</button>
+      
+        <label style="margin-left:20px;">Typ:</label>
+        <label><input type="checkbox" class="typ" value="L" checked> L</label>
+        <label><input type="checkbox" class="typ" value="A"> A</label>
+        <label><input type="checkbox" class="typ" value="B"> B</label>
+      
+        <button type="submit" style="margin-left:15px;">Přidat kombinace</button>
       </div>
+
     </form>
 
     <div class="added-codes" id="added-codes"></div>
@@ -181,8 +188,11 @@
         if (typRady === "even" && r % 2 !== 0) continue;
         if (typRady === "odd" && r % 2 === 0) continue;
         let rStr = r.toString().padStart(2, "0");
-        let kod = `${zona}-${ulicka}-${rStr}-${patro}`;
-        allCodes.push(kod);
+        const typy = Array.from(document.querySelectorAll('.typ:checked')).map(x => x.value);
+        typy.forEach(t => {
+          let kod = `${zona}-${ulicka}-${rStr}-${patro}-${t}`;
+          allCodes.push(kod);
+        });
       }
       refreshCodes();
     }
