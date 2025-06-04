@@ -47,6 +47,17 @@
       border: none;
       cursor: pointer;
     }
+    #labels-preview {
+      margin: 30px auto 10px auto;
+      background: #fff;
+      color: #111;
+      width: 145mm;
+      min-height: 100mm;
+      border-radius: 12px;
+      box-sizing: border-box;
+      padding: 0;
+      /*overflow: hidden;*/
+    }
     .pdf-page {
       width: 145mm;
       height: 100mm;
@@ -56,6 +67,7 @@
       padding: 0;
       box-sizing: border-box;
       page-break-after: always;
+      background: #fff;
     }
     .ean-block {
       height: 35mm;
@@ -65,6 +77,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      background: #fff;
     }
     .ean-block:not(:last-child)::after {
       content: "";
@@ -76,6 +89,7 @@
     }
     svg {
       margin: 0;
+      background: #fff;
     }
     .ean-text {
       margin-top: 3mm;
@@ -88,7 +102,7 @@
 <body>
   <div class="main-content">
     <h2>Generátor štítků (4 na stránku – PDF)</h2>
-    <form id="genForm" onsubmit="event.preventDefault(); generatePDF();">
+    <form id="genForm" onsubmit="event.preventDefault(); generateLabels();">
       <div class="row">
         <label for="zona">Zóna</label>
         <input id="zona" type="text" value="PTA" style="width:60px;">
@@ -115,11 +129,12 @@
         <label><input type="checkbox" class="typ" value="L" checked> L</label>
         <label><input type="checkbox" class="typ" value="A"> A</label>
         <label><input type="checkbox" class="typ" value="B"> B</label>
-        <button type="submit" style="margin-left:30px;">Generovat PDF</button>
+        <button type="submit" style="margin-left:30px;">Generovat štítky</button>
       </div>
     </form>
+    <button onclick="exportToPDF()" id="exportBtn" style="display:none;">Exportovat do PDF</button>
   </div>
-  <div id="hidden-output" style="display:none;"></div>
+  <div id="labels-preview"></div>
   <script>
     function mmToPx(mm) {
       return mm * (96 / 25.4);
@@ -151,11 +166,11 @@
       return codes;
     }
 
-    function generatePDF() {
+    function generateLabels() {
       const codes = generateAllCodes();
       if (!codes.length) return;
 
-      const container = document.getElementById("hidden-output");
+      const container = document.getElementById("labels-preview");
       container.innerHTML = "";
 
       for (let i = 0; i < codes.length; i += 4) {
@@ -182,7 +197,17 @@
         });
         container.appendChild(page);
       }
+      document.getElementById('exportBtn').style.display = 'inline-block';
+      // posunout stránku dolů k náhledu
+      setTimeout(() => window.scrollTo(0,document.body.scrollHeight), 200);
+    }
 
+    function exportToPDF() {
+      const container = document.getElementById("labels-preview");
+      if (!container.innerHTML.trim()) {
+        alert("Nejdřív vygeneruj štítky.");
+        return;
+      }
       const opt = {
         margin: 0,
         filename: 'stitky.pdf',
@@ -190,7 +215,6 @@
         html2canvas: { scale: 2 },
         jsPDF: { unit: 'mm', format: [145, 100], orientation: 'landscape' }
       };
-
       html2pdf().set(opt).from(container).save();
     }
   </script>
