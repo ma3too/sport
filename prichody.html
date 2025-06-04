@@ -595,7 +595,15 @@
     function zobrazZamestnance() {
       if (zamestnanci.length === 0) {
         zamestnanciGrid.innerHTML = "<div style='grid-column:1/-1; text-align:center; color:#fff;'>Seznam zaměstnanců je prázdný nebo se načítá.</div>";
-        countPr.innerHTML = `přítomní: <strong>0</strong> (<strong>0 kmenových</strong> / <strong>0 agenturních</strong>) / <strong>0</strong>, <span style="color:#ee3b33">nepřítomní: <strong>0</strong></span>`;
+        countPr.innerHTML = `přítomní: <strong>${pocetPritomnych}</strong> (
+          <strong style="color:#71b7fb; font-weight:600; letter-spacing:0.08em; text-transform:lowercase;">
+            ${pocetKmen} kmen
+          </strong> /
+          <strong style="color:#71b7fb; font-weight:600; letter-spacing:0.08em; text-transform:lowercase;">
+            ${pocetAgent} agentura
+          </strong>
+        ) / <strong>${zamList.length}</strong>,
+        <span style="color:#ee3b33">nepřítomní: <strong>${nepocet}</strong></span>`;
         return;
       }
 
