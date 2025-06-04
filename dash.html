@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard rozdělení směny</title>
+  <style>
+    body { font-family: 'Open Sans', Arial, sans-serif; background: #2A64AD; color: #fff; }
+    .container { display: flex; justify-content: space-between; padding: 20px; gap: 40px; }
+    .left, .right { background: #fff; color: #222; border-radius: 10px; padding: 24px; }
+    .left { min-width: 280px; width: 320px; }
+    .right { flex: 1; min-width: 600px; }
+    .lang { float: right; margin-bottom: 10px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #333; padding: 8px 12px; text-align: center; }
+    th { background: #2A64AD; color: #fff; }
+    .zone-table input { width: 95%; border: none; background: transparent; text-align: center; }
+    .section { background: #E3E8F0; font-weight: bold; }
+    select, input[type="text"] { margin-bottom: 8px; padding: 6px 9px; }
+    .employee { margin-bottom: 10px; }
+    .btn { background: #2A64AD; color: #fff; border: none; padding: 7px 18px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
+    .btn:hover { background: #3578c0; }
+  </style>
+</head>
+<body>
+  <div class="lang">
+    <button onclick="setLang('cs')">CZ</button>
+    <button onclick="setLang('en')">EN</button>
+    <button onclick="setLang('ua')">UA</button>
+  </div>
+  <h2 style="text-align:center" id="dashboardTitle">Rozdělení směny</h2>
+  <div class="container">
+    <!-- Levý panel: zaměstnanci a preference -->
+    <div class="left">
+      <h3 id="employeesTitle">Zaměstnanci</h3>
+      <div id="employeeList"></div>
+      <button class="btn" onclick="assignEmployees()" id="btnAssign">Rozdělit</button>
+    </div>
+    <!-- Pravý panel: tabule rozdělení -->
+    <div class="right">
+      <h3 id="shiftBoardTitle">Tabule směny</h3>
+      <table class="zone-table" id="zoneTable">
+        <!-- Generováno JS -->
+      </table>
+    </div>
+  </div>
+  <script>
+    // Překlady (CZ, EN, UA)
+    const translations = {
+      cs: {
+        dashboardTitle: "Rozdělení směny",
+        employeesTitle: "Zaměstnanci",
+        shiftBoardTitle: "Tabule směny",
+        btnAssign: "Rozdělit",
+        preference: "Preference",
+        name: "Jméno",
+        zoneTable: [
+          ["DOVOLENÁ", "PICKING", "", "ZASKLADNĚNÍ", ""],
+          ["", "A1", "A2", "A1", "A2"],
+          ["", "A3", "A4", "A3", "A4"],
+          ["", "B1", "B2", "B1", "B2"],
+          ["", "B3", "B4", "B3", "B4"],
+          ["NEMOCENSKÁ", "C1", "C2", "C1", "C2"],
+          ["", "C2", "C4", "C2", "C4"],
+          ["", "D1", "D2", "D1", "D2"],
+          ["", "D4", "D4", "D4", "D4"],
+          ["", "E1", "E2", "E1", "E2"],
+          ["", "E4", "E4", "E4", "E4"],
+          ["B2B", "WAF", "HEAVY", "ÚKLID PT", "MASTER DATA"],
+          ["", "HK", "REPLEN", "CART. CLOSER", ""]
+        ],
+      },
+      en: {
+        dashboardTitle: "Shift Allocation",
+        employeesTitle: "Employees",
+        shiftBoardTitle: "Shift Board",
+        btnAssign: "Assign",
+        preference: "Preference",
+        name: "Name",
+        zoneTable: [
+          ["VACATION", "PICKING", "", "PUTAWAY", ""],
+          ["", "A1", "A2", "A1", "A2"],
+          ["", "A3", "A4", "A3", "A4"],
+          ["", "B1", "B2", "B1", "B2"],
+          ["", "B3", "B4", "B3", "B4"],
+          ["SICK LEAVE", "C1", "C2", "C1", "C2"],
+          ["", "C2", "C4", "C2", "C4"],
+          ["", "D1", "D2", "D1", "D2"],
+          ["", "D4", "D4", "D4", "D4"],
+          ["", "E1", "E2", "E1", "E2"],
+          ["", "E4", "E4", "E4", "E4"],
+          ["B2B", "WAF", "HEAVY", "CLEANING PT", "MASTER DATA"],
+          ["", "HK", "REPLEN", "CART. CLOSER", ""]
+        ],
+      },
+      ua: {
+        dashboardTitle: "Розподіл зміни",
+        employeesTitle: "Працівники",
+        shiftBoardTitle: "Дошка зміни",
+        btnAssign: "Розподілити",
+        preference: "Перевага",
+        name: "Ім'я",
+        zoneTable: [
+          ["ВІДПУСТКА", "ПІКІНГ", "", "СКЛАДУВАННЯ", ""],
+          ["", "A1", "A2", "A1", "A2"],
+          ["", "A3", "A4", "A3", "A4"],
+          ["", "B1", "B2", "B1", "B2"],
+          ["", "B3", "B4", "B3", "B4"],
+          ["ЛІКАРНЯНИЙ", "C1", "C2", "C1", "C2"],
+          ["", "C2", "C4", "C2", "C4"],
+          ["", "D1", "D2", "D1", "D2"],
+          ["", "D4", "D4", "D4", "D4"],
+          ["", "E1", "E2", "E1", "E2"],
+          ["", "E4", "E4", "E4", "E4"],
+          ["B2B", "WAF", "HEAVY", "ПРИБИРАННЯ PT", "MASTER DATA"],
+          ["", "HK", "REPLEN", "CART. CLOSER", ""]
+        ],
+      }
+    };
+    let lang = 'cs';
+
+    // Fiktivní seznam zaměstnanců
+    let employees = [
+      { name: "Adamčiková Alena", preferences: ["picking", "zaskladnění", "b2b"] },
+      { name: "Babych Vasyl", preferences: ["zaskladnění", "picking", "heavy"] },
+      { name: "Berezhanska Nataliia", preferences: ["waf", "picking", "zaskladnění"] },
+      { name: "Bohdanova Svitlana", preferences: ["b2b", "heavy", "picking"] },
+      { name: "Bystroňová Kateřina", preferences: ["picking", "zaskladnění", "dovolená"] },
+      // Přidej další podle potřeby
+    ];
+
+    function setLang(l) {
+      lang = l;
+      document.getElementById("dashboardTitle").innerText = translations[lang].dashboardTitle;
+      document.getElementById("employeesTitle").innerText = translations[lang].employeesTitle;
+      document.getElementById("shiftBoardTitle").innerText = translations[lang].shiftBoardTitle;
+      document.getElementById("btnAssign").innerText = translations[lang].btnAssign;
+      renderEmployeeList();
+      renderZoneTable();
+    }
+
+    function renderEmployeeList() {
+      let html = "";
+      employees.forEach((emp, idx) => {
+        html += `<div class="employee">
+          <strong>${translations[lang].name}:</strong> ${emp.name}<br>
+          <label>${translations[lang].preference} 1: <input type="text" value="${emp.preferences[0] || ""}" onchange="setPref(${idx},0,this.value)" /></label><br>
+          <label>${translations[lang].preference} 2: <input type="text" value="${emp.preferences[1] || ""}" onchange="setPref(${idx},1,this.value)" /></label><br>
+          <label>${translations[lang].preference} 3: <input type="text" value="${emp.preferences[2] || ""}" onchange="setPref(${idx},2,this.value)" /></label>
+        </div>`;
+      });
+      document.getElementById("employeeList").innerHTML = html;
+    }
+
+    function setPref(empIdx, prefIdx, val) {
+      employees[empIdx].preferences[prefIdx] = val;
+    }
+
+    // Inicializace prázdné tabulky pro zónování (pole jmen)
+    let assigned = {};
+    function renderZoneTable() {
+      let t = translations[lang].zoneTable;
+      let html = "";
+      t.forEach((row, i) => {
+        html += "<tr>";
+        row.forEach((cell, j) => {
+          let id = `z${i}_${j}`;
+          html += `<td id="${id}">${cell || ""}<div class="zone-cell" id="names_${id}"></div></td>`;
+        });
+        html += "</tr>";
+      });
+      document.getElementById("zoneTable").innerHTML = html;
+      // Zobrazit přiřazená jména (pokud nějaká jsou)
+      for (const key in assigned) {
+        if (assigned[key].length > 0) {
+          document.getElementById("names_" + key).innerHTML = assigned[key].map(n => `<div>${n}</div>`).join("");
+        }
+      }
+    }
+
+    function assignEmployees() {
+      // Základní demo: rozdělí zaměstnance do první zóny podle preference 1
+      assigned = {};
+      let t = translations[lang].zoneTable;
+      // Najdi zóny (pole, kde jsou hodnoty A1, A2, ..., WAF atd.)
+      let zones = [];
+      t.forEach((row, i) => row.forEach((cell, j) => {
+        if (cell && !["DOVOLENÁ","NEMOCENSKÁ","B2B","VACATION","SICK LEAVE","B2B","ВІДПУСТКА","ЛІКАРНЯНИЙ"].includes(cell)) {
+          zones.push({i, j, cell});
+        }
+      }));
+      // Přiděl pracovníky na zóny podle jejich preference 1 (vylepšíme na rotaci později)
+      employees.forEach((emp, idx) => {
+        // Najdi zónu podle preference 1 (příp. 2 nebo 3, když není místo)
+        let found = false;
+        for (let p = 0; p < 3; p++) {
+          let z = zones.find(z => z.cell.toLowerCase() === emp.preferences[p]);
+          if (z) {
+            let zid = `z${z.i}_${z.j}`;
+            assigned[zid] = assigned[zid] || [];
+            assigned[zid].push(emp.name);
+            found = true;
+            break;
+          }
+        }
+        // Pokud nenašel zónu, nedá nikam (zatím)
+      });
+      renderZoneTable();
+    }
+
+    // Inicializace
+    renderEmployeeList();
+    renderZoneTable();
+  </script>
+</body>
+</html>
