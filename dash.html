@@ -2,214 +2,191 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard rozdělení směny</title>
+  <title>Rozdělení směny – drag & drop</title>
   <style>
-    body { font-family: 'Open Sans', Arial, sans-serif; background: #2A64AD; color: #fff; }
-    .container { display: flex; justify-content: space-between; padding: 20px; gap: 40px; }
-    .left, .right { background: #fff; color: #222; border-radius: 10px; padding: 24px; }
-    .left { min-width: 280px; width: 320px; }
-    .right { flex: 1; min-width: 600px; }
-    .lang { float: right; margin-bottom: 10px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #333; padding: 8px 12px; text-align: center; }
-    th { background: #2A64AD; color: #fff; }
-    .zone-table input { width: 95%; border: none; background: transparent; text-align: center; }
-    .section { background: #E3E8F0; font-weight: bold; }
-    select, input[type="text"] { margin-bottom: 8px; padding: 6px 9px; }
-    .employee { margin-bottom: 10px; }
-    .btn { background: #2A64AD; color: #fff; border: none; padding: 7px 18px; border-radius: 5px; cursor: pointer; margin-top: 10px;}
-    .btn:hover { background: #3578c0; }
+    body { font-family: 'Open Sans', Arial, sans-serif; background: #2A64AD; color: #222; margin: 0;}
+    .main { display: flex; gap: 38px; padding: 35px;}
+    .pool { width: 240px; background: #fff; border-radius: 12px; padding: 18px; min-height: 500px; box-shadow: 0 1px 6px #2a64ad44;}
+    .pool h3 { text-align: center; }
+    .employee { padding: 7px 11px; background: #f5f6fa; border-radius: 6px; margin-bottom: 7px; cursor: grab; box-shadow: 0 1px 3px #bbb; border: 1px solid #e3e8f0;}
+    .zone-table { background: #fff; border-radius: 12px; padding: 18px 10px; box-shadow: 0 1px 6px #2a64ad33;}
+    table { border-collapse: collapse; margin: 0 auto; }
+    th, td { border: 1px solid #bbb; min-width: 85px; height: 42px; text-align: center; }
+    th { background: #e3e8f0; color: #222; font-weight: bold;}
+    .zone-cell { min-height: 36px; }
+    .droppable { background: #d8f4ff; }
+    .drag-over { outline: 2px dashed #2A64AD; background: #eff8ff; }
+    .reset-btn { margin: 12px auto 0; display: block; background: #DB4B3E; color: #fff; padding: 7px 20px; border-radius: 7px; border: none; font-weight: bold; cursor: pointer; }
+    .reset-btn:hover { background: #c0392b;}
   </style>
 </head>
 <body>
-  <div class="lang">
-    <button onclick="setLang('cs')">CZ</button>
-    <button onclick="setLang('en')">EN</button>
-    <button onclick="setLang('ua')">UA</button>
-  </div>
-  <h2 style="text-align:center" id="dashboardTitle">Rozdělení směny</h2>
-  <div class="container">
-    <!-- Levý panel: zaměstnanci a preference -->
-    <div class="left">
-      <h3 id="employeesTitle">Zaměstnanci</h3>
-      <div id="employeeList"></div>
-      <button class="btn" onclick="assignEmployees()" id="btnAssign">Rozdělit</button>
+  <div class="main">
+    <div class="pool" id="employee-pool">
+      <h3>Zaměstnanci</h3>
+      <div id="pool-list"></div>
+      <button class="reset-btn" onclick="resetAll()">Reset</button>
     </div>
-    <!-- Pravý panel: tabule rozdělení -->
-    <div class="right">
-      <h3 id="shiftBoardTitle">Tabule směny</h3>
-      <table class="zone-table" id="zoneTable">
-        <!-- Generováno JS -->
+    <div class="zone-table">
+      <table id="zone-table">
+        <!-- generuje JS -->
       </table>
     </div>
   </div>
   <script>
-    // Překlady (CZ, EN, UA)
-    const translations = {
-      cs: {
-        dashboardTitle: "Rozdělení směny",
-        employeesTitle: "Zaměstnanci",
-        shiftBoardTitle: "Tabule směny",
-        btnAssign: "Rozdělit",
-        preference: "Preference",
-        name: "Jméno",
-        zoneTable: [
-          ["DOVOLENÁ", "PICKING", "", "ZASKLADNĚNÍ", ""],
-          ["", "A1", "A2", "A1", "A2"],
-          ["", "A3", "A4", "A3", "A4"],
-          ["", "B1", "B2", "B1", "B2"],
-          ["", "B3", "B4", "B3", "B4"],
-          ["NEMOCENSKÁ", "C1", "C2", "C1", "C2"],
-          ["", "C2", "C4", "C2", "C4"],
-          ["", "D1", "D2", "D1", "D2"],
-          ["", "D4", "D4", "D4", "D4"],
-          ["", "E1", "E2", "E1", "E2"],
-          ["", "E4", "E4", "E4", "E4"],
-          ["B2B", "WAF", "HEAVY", "ÚKLID PT", "MASTER DATA"],
-          ["", "HK", "REPLEN", "CART. CLOSER", ""]
-        ],
-      },
-      en: {
-        dashboardTitle: "Shift Allocation",
-        employeesTitle: "Employees",
-        shiftBoardTitle: "Shift Board",
-        btnAssign: "Assign",
-        preference: "Preference",
-        name: "Name",
-        zoneTable: [
-          ["VACATION", "PICKING", "", "PUTAWAY", ""],
-          ["", "A1", "A2", "A1", "A2"],
-          ["", "A3", "A4", "A3", "A4"],
-          ["", "B1", "B2", "B1", "B2"],
-          ["", "B3", "B4", "B3", "B4"],
-          ["SICK LEAVE", "C1", "C2", "C1", "C2"],
-          ["", "C2", "C4", "C2", "C4"],
-          ["", "D1", "D2", "D1", "D2"],
-          ["", "D4", "D4", "D4", "D4"],
-          ["", "E1", "E2", "E1", "E2"],
-          ["", "E4", "E4", "E4", "E4"],
-          ["B2B", "WAF", "HEAVY", "CLEANING PT", "MASTER DATA"],
-          ["", "HK", "REPLEN", "CART. CLOSER", ""]
-        ],
-      },
-      ua: {
-        dashboardTitle: "Розподіл зміни",
-        employeesTitle: "Працівники",
-        shiftBoardTitle: "Дошка зміни",
-        btnAssign: "Розподілити",
-        preference: "Перевага",
-        name: "Ім'я",
-        zoneTable: [
-          ["ВІДПУСТКА", "ПІКІНГ", "", "СКЛАДУВАННЯ", ""],
-          ["", "A1", "A2", "A1", "A2"],
-          ["", "A3", "A4", "A3", "A4"],
-          ["", "B1", "B2", "B1", "B2"],
-          ["", "B3", "B4", "B3", "B4"],
-          ["ЛІКАРНЯНИЙ", "C1", "C2", "C1", "C2"],
-          ["", "C2", "C4", "C2", "C4"],
-          ["", "D1", "D2", "D1", "D2"],
-          ["", "D4", "D4", "D4", "D4"],
-          ["", "E1", "E2", "E1", "E2"],
-          ["", "E4", "E4", "E4", "E4"],
-          ["B2B", "WAF", "HEAVY", "ПРИБИРАННЯ PT", "MASTER DATA"],
-          ["", "HK", "REPLEN", "CART. CLOSER", ""]
-        ],
-      }
-    };
-    let lang = 'cs';
-
-    // Fiktivní seznam zaměstnanců
+    // Demo zaměstnanců (jméno + pozice)
     let employees = [
-      { name: "Adamčiková Alena", preferences: ["picking", "zaskladnění", "b2b"] },
-      { name: "Babych Vasyl", preferences: ["zaskladnění", "picking", "heavy"] },
-      { name: "Berezhanska Nataliia", preferences: ["waf", "picking", "zaskladnění"] },
-      { name: "Bohdanova Svitlana", preferences: ["b2b", "heavy", "picking"] },
-      { name: "Bystroňová Kateřina", preferences: ["picking", "zaskladnění", "dovolená"] },
-      // Přidej další podle potřeby
+      { name: "Adamčiková Alena", pos: "LOG" },
+      { name: "Babych Vasyl", pos: "UKLID" },
+      { name: "Berezhanska Nataliia", pos: "LOG" },
+      { name: "Bohdanova Svitlana", pos: "LOG" },
+      { name: "Bystroňová Kateřina", pos: "LOG" },
+      { name: "Coufalová Diana", pos: "LOG" },
+      { name: "Čechová Michaela", pos: "LOG" }
+      // ... přidej další dle potřeby
     ];
 
-    function setLang(l) {
-      lang = l;
-      document.getElementById("dashboardTitle").innerText = translations[lang].dashboardTitle;
-      document.getElementById("employeesTitle").innerText = translations[lang].employeesTitle;
-      document.getElementById("shiftBoardTitle").innerText = translations[lang].shiftBoardTitle;
-      document.getElementById("btnAssign").innerText = translations[lang].btnAssign;
-      renderEmployeeList();
-      renderZoneTable();
-    }
+    // Rozložení tabulky podle vzoru (text = název zóny nebo sekce)
+    const zoneLayout = [
+      ["DOVOLENÁ", "PICKING", "", "ZASKLADNĚNÍ", ""],
+      ["", "A1", "A2", "A1", "A2"],
+      ["", "A3", "A4", "A3", "A4"],
+      ["", "B1", "B2", "B1", "B2"],
+      ["", "B3", "B4", "B3", "B4"],
+      ["NEMOCENSKÁ", "C1", "C2", "C1", "C2"],
+      ["", "C2", "C4", "C2", "C4"],
+      ["", "D1", "D2", "D1", "D2"],
+      ["", "D4", "D4", "D4", "D4"],
+      ["", "E1", "E2", "E1", "E2"],
+      ["", "E4", "E4", "E4", "E4"],
+      ["B2B", "WAF", "HEAVY", "ÚKLID PT", "MASTER DATA"],
+      ["", "HK", "REPLEN", "CART. CLOSER", ""]
+    ];
 
-    function renderEmployeeList() {
-      let html = "";
-      employees.forEach((emp, idx) => {
-        html += `<div class="employee">
-          <strong>${translations[lang].name}:</strong> ${emp.name}<br>
-          <label>${translations[lang].preference} 1: <input type="text" value="${emp.preferences[0] || ""}" onchange="setPref(${idx},0,this.value)" /></label><br>
-          <label>${translations[lang].preference} 2: <input type="text" value="${emp.preferences[1] || ""}" onchange="setPref(${idx},1,this.value)" /></label><br>
-          <label>${translations[lang].preference} 3: <input type="text" value="${emp.preferences[2] || ""}" onchange="setPref(${idx},2,this.value)" /></label>
-        </div>`;
+    // Speciální sekce, které se neresetují (lowercase pro jednodušší porovnání)
+    const specialZones = [
+      "dovolená", "nemocenská", "b2b", "master data", "úklid", "úklid pt"
+    ];
+
+    // Stav: kam je kdo přiřazen (key: zoneId, value: pole zaměstnanců)
+    let assignments = {}; // např. {z1_2: [{name, pos}], ...}
+    // Pool = zaměstnanci, kteří nejsou přiřazeni do žádné zóny kromě speciálních
+    let pool = [...employees];
+
+    // Renderování poolu
+    function renderPool() {
+      let poolDiv = document.getElementById("pool-list");
+      poolDiv.innerHTML = "";
+      pool.forEach(emp => {
+        let div = document.createElement("div");
+        div.className = "employee";
+        div.draggable = true;
+        div.textContent = emp.name + " (" + emp.pos + ")";
+        div.ondragstart = e => {
+          e.dataTransfer.setData("text/plain", JSON.stringify(emp));
+        };
+        poolDiv.appendChild(div);
       });
-      document.getElementById("employeeList").innerHTML = html;
     }
 
-    function setPref(empIdx, prefIdx, val) {
-      employees[empIdx].preferences[prefIdx] = val;
-    }
-
-    // Inicializace prázdné tabulky pro zónování (pole jmen)
-    let assigned = {};
-    function renderZoneTable() {
-      let t = translations[lang].zoneTable;
+    // Renderování tabulky zón
+    function renderTable() {
+      let t = zoneLayout;
       let html = "";
-      t.forEach((row, i) => {
+      for (let i = 0; i < t.length; i++) {
         html += "<tr>";
-        row.forEach((cell, j) => {
+        for (let j = 0; j < t[i].length; j++) {
+          let cell = t[i][j];
           let id = `z${i}_${j}`;
-          html += `<td id="${id}">${cell || ""}<div class="zone-cell" id="names_${id}"></div></td>`;
-        });
-        html += "</tr>";
-      });
-      document.getElementById("zoneTable").innerHTML = html;
-      // Zobrazit přiřazená jména (pokud nějaká jsou)
-      for (const key in assigned) {
-        if (assigned[key].length > 0) {
-          document.getElementById("names_" + key).innerHTML = assigned[key].map(n => `<div>${n}</div>`).join("");
+          if (!cell) {
+            html += `<td></td>`;
+            continue;
+          }
+          // Speciální zóny mají jiný styl
+          let special = specialZones.includes(cell.trim().toLowerCase()) ? ' style="background:#ffe2ad"' : '';
+          html += `<td${special}>
+              <div style="font-weight:bold">${cell}</div>
+              <div class="zone-cell droppable"
+                id="${id}"
+                ondragover="event.preventDefault();this.classList.add('drag-over');"
+                ondragleave="this.classList.remove('drag-over');"
+                ondrop="dropToZone(event, '${id}', '${cell}')"
+              >${(assignments[id]||[]).map(emp=>`<div class="employee" draggable="true" ondragstart='dragFromZone(event,${JSON.stringify(emp)}, "${id}")'>${emp.name} (${emp.pos})</div>`).join("")}</div>
+            </td>`;
         }
+        html += "</tr>";
       }
+      document.getElementById("zone-table").innerHTML = html;
     }
 
-    function assignEmployees() {
-      // Základní demo: rozdělí zaměstnance do první zóny podle preference 1
-      assigned = {};
-      let t = translations[lang].zoneTable;
-      // Najdi zóny (pole, kde jsou hodnoty A1, A2, ..., WAF atd.)
-      let zones = [];
-      t.forEach((row, i) => row.forEach((cell, j) => {
-        if (cell && !["DOVOLENÁ","NEMOCENSKÁ","B2B","VACATION","SICK LEAVE","B2B","ВІДПУСТКА","ЛІКАРНЯНИЙ"].includes(cell)) {
-          zones.push({i, j, cell});
+    // Přetažení z poolu do zóny
+    window.dropToZone = function(event, zoneId, cellName) {
+      event.preventDefault();
+      event.currentTarget.classList.remove('drag-over');
+      let emp = JSON.parse(event.dataTransfer.getData("text/plain"));
+      // Kontrola: už není v zóně?
+      assignments[zoneId] = assignments[zoneId] || [];
+      if (assignments[zoneId].some(e => e.name === emp.name)) return;
+      // Odeber z poolu (jen když tam je)
+      pool = pool.filter(e => e.name !== emp.name);
+      // Odeber ze všech ostatních zón (nemůže být víckrát)
+      for (let key in assignments) {
+        assignments[key] = assignments[key].filter(e => e.name !== emp.name);
+      }
+      assignments[zoneId].push(emp);
+      renderPool();
+      renderTable();
+    };
+
+    // Přetažení zpět do poolu z libovolné zóny
+    window.dragFromZone = function(event, emp, fromZone) {
+      event.dataTransfer.setData("text/plain", JSON.stringify(emp));
+      // při dropu do poolu zavoláme "dropToPool"
+      event.dataTransfer.setData("fromZone", fromZone);
+    };
+
+    // Pool je také droppable
+    document.getElementById("pool-list").ondragover = function(e){ e.preventDefault(); this.classList.add('drag-over'); };
+    document.getElementById("pool-list").ondragleave = function(e){ this.classList.remove('drag-over'); };
+    document.getElementById("pool-list").ondrop = function(event) {
+      event.preventDefault();
+      this.classList.remove('drag-over');
+      let emp = JSON.parse(event.dataTransfer.getData("text/plain"));
+      let fromZone = event.dataTransfer.getData("fromZone");
+      if (fromZone) {
+        assignments[fromZone] = (assignments[fromZone]||[]).filter(e => e.name !== emp.name);
+      }
+      // Kontrola: už není v poolu?
+      if (!pool.some(e=>e.name===emp.name)) pool.push(emp);
+      renderPool();
+      renderTable();
+    };
+
+    // RESET: všichni mimo speciální zóny zpět do poolu
+    function resetAll() {
+      // Najdi všechny zaměstnance v běžných zónách a přesuň do poolu
+      for (let key in assignments) {
+        // Zjisti, zda je zóna speciální
+        let i_j = key.match(/^z(\d+)_(\d+)$/);
+        if (!i_j) continue;
+        let cell = zoneLayout[+i_j[1]][+i_j[2]];
+        if (cell && specialZones.includes(cell.trim().toLowerCase())) {
+          // Speciální sekce — ponechat
+          continue;
         }
-      }));
-      // Přiděl pracovníky na zóny podle jejich preference 1 (vylepšíme na rotaci později)
-      employees.forEach((emp, idx) => {
-        // Najdi zónu podle preference 1 (příp. 2 nebo 3, když není místo)
-        let found = false;
-        for (let p = 0; p < 3; p++) {
-          let z = zones.find(z => z.cell.toLowerCase() === emp.preferences[p]);
-          if (z) {
-            let zid = `z${z.i}_${z.j}`;
-            assigned[zid] = assigned[zid] || [];
-            assigned[zid].push(emp.name);
-            found = true;
-            break;
-          }
-        }
-        // Pokud nenašel zónu, nedá nikam (zatím)
-      });
-      renderZoneTable();
+        // Všechny zaměstnance přidat zpět do poolu (pokud už tam nejsou)
+        (assignments[key]||[]).forEach(emp=>{
+          if (!pool.some(e=>e.name===emp.name)) pool.push(emp);
+        });
+        assignments[key] = [];
+      }
+      renderPool();
+      renderTable();
     }
 
     // Inicializace
-    renderEmployeeList();
-    renderZoneTable();
+    renderPool();
+    renderTable();
   </script>
 </body>
 </html>
