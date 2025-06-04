@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Generátor štítků – Otočené EANy PDF</title>
+  <title>Generátor štítků – PDF export</title>
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
@@ -55,45 +55,43 @@
       background: #fff;
       color: #111;
       width: 145mm;
-      min-height: 100mm;
+      height: 100mm;
       border-radius: 12px;
       box-sizing: border-box;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
     .pdf-page {
       width: 145mm;
       height: 100mm;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      justify-content: center;
       padding: 0;
       box-sizing: border-box;
       page-break-after: always;
       background: #fff;
     }
     .ean-block {
+      width: 80mm;
       height: 35mm;
-      width: 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      margin: 0 auto;
       position: relative;
       background: #fff;
-      /* Otočení obsahu štítku */
-      transform: rotate(90deg);
-      /* Posunutí obsahu doprava na střed řádku */
-      transform-origin: left top;
-      margin-left: 35mm; /* posun tak, aby byl štítek ve "svém" řádku */
     }
     .ean-block:not(:last-child)::after {
       content: "";
       position: absolute;
-      bottom: -1.2mm;
-      left: 5%;
-      width: 90%;
-      border-bottom: 1px solid black;
-      transform: rotate(-90deg); /* aby linka nebyla otočená */
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      border-bottom: 1.2px solid black;
     }
     svg {
       margin: 0;
@@ -101,16 +99,12 @@
       display: block;
     }
     .ean-text {
-      margin-top: 3mm;
+      margin-top: 4mm;
       color: black;
       font-family: monospace;
       font-size: var(--ean-font-size);
-      writing-mode: vertical-rl;
-      text-orientation: mixed;
-      transform: rotate(-180deg); /* pro svislé čtení vpravo */
-      margin-bottom: 2mm;
+      text-align: center;
     }
-    /* Skrytí bílých mezer okolo svg při PDF exportu */
     @media print {
       body { background: white; }
       #labels-preview { box-shadow: none; }
@@ -119,7 +113,7 @@
 </head>
 <body>
   <div class="main-content">
-    <h2>Generátor štítků (4 na stránku, otočené – PDF)</h2>
+    <h2>Generátor štítků (4 na stránku, PDF export)</h2>
     <form id="genForm" onsubmit="event.preventDefault(); generateLabels();">
       <div class="row">
         <label for="zona">Zóna</label>
