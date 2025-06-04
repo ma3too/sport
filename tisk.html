@@ -6,109 +6,43 @@
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
-    :root {
-      --ean-font-size: 1.1rem;
-    }
+    :root { --ean-font-size: 1.1rem; }
     body {
-      background: #0066b3;
-      color: white;
-      font-family: 'Open Sans', sans-serif;
-      text-align: center;
-      padding: 25px;
+      background: #0066b3; color: white; font-family: 'Open Sans', sans-serif;
+      text-align: center; padding: 25px;
     }
     .main-content {
-      background: rgba(255,255,255,0.09);
-      display: inline-block;
-      padding: 24px 18px;
-      border-radius: 16px;
+      background: rgba(255,255,255,0.09); display: inline-block;
+      padding: 24px 18px; border-radius: 16px;
     }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      margin-bottom: 12px;
-    }
-    input, select {
-      padding: 6px 10px;
-      font-size: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    label {
-      font-weight: bold;
-      font-size: 1rem;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 24px;
-      font-size: 1rem;
-      border-radius: 6px;
-      background: #DB4B3E;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+    .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-bottom: 12px; }
+    input, select { padding: 6px 10px; font-size: 1rem; border-radius: 6px; border: 1px solid #ccc; }
+    label { font-weight: bold; font-size: 1rem; }
+    button { margin-top: 10px; padding: 10px 24px; font-size: 1rem; border-radius: 6px; background: #DB4B3E; color: white; border: none; cursor: pointer; }
     #labels-preview {
-      margin: 30px auto 10px auto;
-      background: #fff;
-      color: #111;
-      width: 145mm;
-      height: 100mm;
-      border-radius: 12px;
-      box-sizing: border-box;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+      margin: 30px auto 10px auto; background: #fff; color: #111;
+      width: 145mm; height: 100mm; border-radius: 12px; box-sizing: border-box;
+      padding: 0; display: flex; flex-direction: column; justify-content: center;
     }
     .pdf-page {
-      width: 145mm;
-      height: 100mm;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 0;
-      box-sizing: border-box;
-      page-break-after: always;
-      background: #fff;
+      width: 145mm; height: 100mm; display: flex; flex-direction: column; justify-content: center;
+      padding: 0; box-sizing: border-box; page-break-after: always; background: #fff;
     }
     .ean-block {
-      width: 80mm;
-      height: 35mm;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      position: relative;
-      background: #fff;
+      width: 80mm; height: 35mm; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; margin: 0 auto;
+      position: relative; background: #fff;
     }
     .ean-block:not(:last-child)::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
+      content: ""; position: absolute; bottom: 0; left: 0; width: 100%;
       border-bottom: 1.2px solid black;
     }
-    svg {
-      margin: 0;
-      background: #fff;
-      display: block;
-    }
+    svg { margin: 0; background: #fff; display: block; }
     .ean-text {
-      margin-top: 4mm;
-      color: black;
-      font-family: monospace;
-      font-size: var(--ean-font-size);
-      text-align: center;
+      margin-top: 4mm; color: black; font-family: monospace;
+      font-size: var(--ean-font-size); text-align: center;
     }
-    @media print {
-      body { background: white; }
-      #labels-preview { box-shadow: none; }
-    }
+    @media print { body { background: white; } #labels-preview { box-shadow: none; } }
   </style>
 </head>
 <body>
