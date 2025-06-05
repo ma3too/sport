@@ -27,12 +27,14 @@
     .pdf-btn, .print-btn { background:#2A64AD; color:white; border:none; border-radius:4px; font-size:15px; padding:7px 14px; margin-left: 12px; cursor:pointer;}
     .print-btn {background: #4DA86E;}
     .pdf-btn:hover, .print-btn:hover { filter:brightness(1.13);}
+    .print-title {font-size: 23px; font-weight: bold; color: #2A64AD; margin-bottom: 14px; text-align:left;}
     @media (max-width:900px) {.calendar {font-size:12px; grid-template-columns: repeat(7, 1fr);}}
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible !important;}
       .print-area { position: absolute; left: 0; top: 0; width: 100vw; background: white;}
       .calendar-toolbar, .upload-block, h1 {display:none !important;}
+      .print-title {display: block !important;}
     }
   </style>
 </head>
@@ -45,13 +47,14 @@
       <span style="color:#888;">Nahraj CSV export a udělej si přehled... Data zůstanou uložena v prohlížeči do přehrání dalším seznamem.</span>
     </div>
     <div class="kalendar-wrap" id="kalendarWrap" style="display:none;">
-      <div class="print-area">
-        <div class="calendar-toolbar">
-          <select class="month-select" id="monthSelect"></select>
-          <span class="calendar-title" id="calendarTitle"></span>
-          <button class="pdf-btn" onclick="exportPDF()">Export PDF</button>
-          <button class="print-btn" onclick="printKalendar()">Tisk kalendáře</button>
-        </div>
+      <div class="calendar-toolbar">
+        <select class="month-select" id="monthSelect"></select>
+        <span class="calendar-title" id="calendarTitle"></span>
+        <button class="pdf-btn" onclick="exportPDF()">Export PDF</button>
+        <button class="print-btn" onclick="printKalendar()">Tisk kalendáře</button>
+      </div>
+      <div class="print-area" id="printArea">
+        <div class="print-title" id="printTitle" style="display:block;"></div>
         <div id="calendarContainer"></div>
         <div class="legend" id="legendBlock">
           <div class="legend-item"><span class="abs-dov">DOV</span> Dovolená</div>
@@ -144,7 +147,9 @@
     function renderKalendar(parsed, year, month) {
       document.getElementById('kalendarWrap').style.display = "";
       fillMonthSelect(year, month);
-      document.getElementById('calendarTitle').innerText = `${mesice[month-1]} ${year.toString().slice(-2)}`;
+      let title = `${mesice[month-1]} ${year.toString().slice(-2)}`;
+      document.getElementById('calendarTitle').innerText = title;
+      document.getElementById('printTitle').innerText = title;
       let calendarArea = document.getElementById('calendarContainer');
       calendarArea.innerHTML = "";
       // CZ dny
@@ -198,16 +203,15 @@
     function exportPDF() {
       import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js').then(html2canvas => {
         html2canvas = html2canvas.default;
-        let area = document.querySelector('.print-area');
-        let calTitle = document.getElementById('calendarTitle').innerText;
-        html2canvas(area).then(canvas => {
+        let area = document.getElementById('printArea');
+        let calTitle = document.getElementById('printTitle').innerText;
+        html2canvas(area, {backgroundColor: "#fff"}).then(canvas => {
           let imgData = canvas.toDataURL('image/png');
           const pdf = new window.jspdf.jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
           let width = pdf.internal.pageSize.getWidth();
-          let height = pdf.internal.pageSize.getHeight();
-          let imgHeight = canvas.height * (width / canvas.width);
-          pdf.text(calTitle, 40, 34);
-          pdf.addImage(imgData, 'PNG', 40, 50, width-80, imgHeight-40);
+          let imgWidth = width - 80;
+          let imgHeight = canvas.height * (imgWidth / canvas.width);
+          pdf.addImage(imgData, 'PNG', 40, 34, imgWidth, imgHeight);
           pdf.save('kalendar-' + calTitle.replace(" ","_") + '.pdf');
         });
       });
