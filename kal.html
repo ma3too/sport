@@ -8,11 +8,10 @@
     h1 { text-align: center; color: #2A64AD; margin-top: 24px;}
     .center { max-width: 1200px; margin: 0 auto; padding: 30px 20px;}
     .upload-block {text-align: center; margin-bottom: 30px;}
-    .kalendare { display: flex; flex-wrap: wrap; gap: 32px; justify-content: center;}
     .kalendar-wrap { background: #e6edfa; border-radius: 16px; box-shadow: 0 0 14px #c3cbe1; padding: 20px 26px 24px 26px; margin-bottom: 28px;}
     .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;}
     .day-header { text-align: center; font-weight: bold; font-size: 18px; color: #2A64AD; margin-bottom: 5px;}
-    .cell { min-height: 120px; max-height: 120px; height: 120px; background: white; border-radius: 10px; box-shadow: 0 0 6px #c3cbe1; padding: 6px 6px 3px 9px; position: relative; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-start; }
+    .cell { min-height: 120px; background: white; border-radius: 10px; box-shadow: 0 0 6px #c3cbe1; padding: 6px 6px 3px 9px; position: relative; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-start; }
     .cell .day-num { font-size: 18px; font-weight: bold; color: #444; margin-bottom: 4px;}
     .names-list {margin: 3px 0 0 0; font-size: 13px;}
     .legend { margin: 32px 0 0 0; display: flex; gap: 35px; justify-content: center;}
@@ -25,16 +24,15 @@
     .calendar-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;}
     .month-select {font-size: 16px; border-radius: 6px; border:1px solid #aac2e4; padding:4px 9px;}
     .calendar-title {font-size: 23px; font-weight: bold; color: #2A64AD;}
-    .pdf-btn, .remove-btn, .print-btn { background:#2A64AD; color:white; border:none; border-radius:7px; font-size:15px; padding:7px 14px; margin-left: 7px; cursor:pointer;}
-    .remove-btn { background:#DB4B3E;}
+    .pdf-btn, .print-btn { background:#2A64AD; color:white; border:none; border-radius:7px; font-size:15px; padding:7px 14px; margin-left: 7px; cursor:pointer;}
     .print-btn {background: #4DA86E;}
-    .pdf-btn:hover, .remove-btn:hover, .print-btn:hover { filter:brightness(1.13);}
-    .add-kalendar {background:#42B63A; color:white; border:none; border-radius:9px; font-size:17px; padding:10px 24px; margin:22px auto 30px auto; display:block; cursor:pointer; font-weight:bold;}
+    .pdf-btn:hover, .print-btn:hover { filter:brightness(1.13);}
     @media (max-width:900px) {.calendar {font-size:12px; grid-template-columns: repeat(7, 1fr);}}
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible !important;}
       .print-area { position: absolute; left: 0; top: 0; width: 100vw; background: white;}
+      .calendar-toolbar, .upload-block, h1 {display:none !important;}
     }
   </style>
 </head>
@@ -44,61 +42,59 @@
     <div class="upload-block">
       <input type="file" id="csvInput" accept=".csv" />
       <br><br>
-      <span style="color:#888;">Nahraj CSV export a udělej si přehled... Kalendáře zůstanou uloženy v prohlížeči do přehrání dalším seznamem.</span>
+      <span style="color:#888;">Nahraj CSV export a udělej si přehled... Data zůstanou uložena v prohlížeči do přehrání dalším seznamem.</span>
     </div>
-    <button class="add-kalendar" onclick="addKalendar()">+ Přidat nový kalendář</button>
-    <div class="kalendare" id="kalendare"></div>
-    <template id="legend-template">
-      <div class="legend">
+    <div class="kalendar-wrap" id="kalendarWrap" style="display:none;">
+      <div class="calendar-toolbar">
+        <select class="month-select" id="monthSelect"></select>
+        <span class="calendar-title" id="calendarTitle"></span>
+        <button class="pdf-btn" onclick="exportPDF()">Export PDF</button>
+        <button class="print-btn" onclick="printKalendar()">Tisk kalendáře</button>
+      </div>
+      <div class="print-area" id="calendarContainer"></div>
+      <div class="legend" id="legendBlock">
         <div class="legend-item"><span class="abs-dov">DOV</span> Dovolená</div>
         <div class="legend-item"><span class="abs-pul">D/2</span> 1/2 dovolené</div>
         <div class="legend-item"><span class="abs-nem">NEM</span> Nemocenská</div>
         <div class="legend-item"><span class="abs-lek">LEK</span> Lékař</div>
         <div class="legend-item"><span class="abs-ostatni">OST</span> Ostatní absence</div>
       </div>
-    </template>
+    </div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     // Barvy a zkratky
     const absenceTypes = {
-      'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená' },
-      'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené' },
-      'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská' },
-      'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař' }
+      'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská', order: 1 },
+      'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 2 },
+      'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená', order: 3 },
+      'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené', order: 4 }
     };
     function getAbsenceType(code) {
       code = (code || '').toUpperCase().replace(/\s+/g, '');
-      if (code === 'DOV') return absenceTypes['DOV'];
-      if (code === 'D/2' || code === '1/2DOV' || code === '1/2DOV' || code === 'PULDOV') return absenceTypes['D/2'];
       if (code === 'NEM') return absenceTypes['NEM'];
       if (code === 'LEK') return absenceTypes['LEK'];
-      if (code && code !== 'SME' && code !== '-') return { label: code, cls: 'abs-ostatni', name: 'Ostatní' };
+      if (code === 'DOV') return absenceTypes['DOV'];
+      if (code === 'D/2' || code === '1/2DOV' || code === 'PULDOV') return absenceTypes['D/2'];
+      if (code && code !== 'SME' && code !== '-') return { label: code, cls: 'abs-ostatni', name: 'Ostatní', order: 5 };
       return null;
     }
     // CZ měsíce
     const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
 
-    // LocalStorage - načíst kalendáře
+    // Uložení do cache
+    function saveToCache(parsed, year, month) {
+      let cache = {parsed, year, month};
+      localStorage.setItem("kalendarCache", JSON.stringify(cache));
+    }
+    // Načtení z cache po načtení stránky
     window.addEventListener('DOMContentLoaded', () => {
       let cache = localStorage.getItem("kalendarCache");
       if (cache) {
         let data = JSON.parse(cache);
-        data.forEach(obj => createKalendar(obj.data, obj.month, obj.year));
+        renderKalendar(data.parsed, data.year, data.month);
       }
     });
-
-    // Uložení do cache
-    function saveToCache() {
-      let cache = [];
-      document.querySelectorAll('.kalendar-wrap').forEach(el => {
-        let data = el.kalendarData; // v .kalendarData je původní rozparsované CSV!
-        let month = parseInt(el.querySelector('.month-select').value.split('-')[1]);
-        let year = parseInt(el.querySelector('.month-select').value.split('-')[0]);
-        cache.push({data, month, year});
-      });
-      localStorage.setItem("kalendarCache", JSON.stringify(cache));
-    }
 
     // CSV import a inicializace
     document.getElementById('csvInput').addEventListener('change', function(e) {
@@ -111,37 +107,16 @@
         // Default měsíc/rok (dnes)
         let today = new Date();
         let m = today.getMonth()+1, y = today.getFullYear();
-        addKalendar(parsed, y, m);
-        saveToCache();
+        renderKalendar(parsed, y, m);
+        saveToCache(parsed, y, m);
       };
       reader.readAsText(file, 'windows-1250');
     });
 
-    // Přidání kalendáře
-    function addKalendar(parsed, year, month) {
-      if (!parsed) parsed = {};
-      if (!month || !year) {
-        let d = new Date();
-        month = d.getMonth()+1;
-        year = d.getFullYear();
-      }
-      createKalendar(parsed, month, year);
-      saveToCache();
-    }
-
-    // Vytvoření jednoho kalendáře
-    function createKalendar(parsed, month, year) {
-      let kalendareDiv = document.getElementById('kalendare');
-      // HTML wrapper
-      let wrap = document.createElement('div');
-      wrap.className = 'kalendar-wrap';
-      wrap.kalendarData = parsed; // pro cache
-      // Toolbar s volbou měsíce/roku a tlačítky
-      let toolbar = document.createElement('div');
-      toolbar.className = "calendar-toolbar";
-      // Výběr měsíc/rok
-      let ms = document.createElement('select');
-      ms.className = "month-select";
+    // Měsíční výběr
+    function fillMonthSelect(year, month) {
+      let ms = document.getElementById('monthSelect');
+      ms.innerHTML = '';
       let now = new Date();
       for(let y = now.getFullYear()-1; y <= now.getFullYear()+1; y++) {
         for(let m = 1; m <= 12; m++) {
@@ -152,60 +127,44 @@
           ms.appendChild(opt);
         }
       }
-      ms.addEventListener('change', () => { renderKalendar(wrap, parsed, parseInt(ms.value.split('-')[0]), parseInt(ms.value.split('-')[1])); saveToCache(); });
-      // Titulek
-      let calTitle = document.createElement('span');
-      calTitle.className = "calendar-title";
-      calTitle.innerText = `${mesice[month-1]} ${year.toString().slice(-2)}`;
-      // PDF a odebrat
-      let pdfBtn = document.createElement('button');
-      pdfBtn.className = "pdf-btn";
-      pdfBtn.innerText = "Export PDF";
-      pdfBtn.onclick = () => exportPDF(wrap, calTitle.innerText);
-      let printBtn = document.createElement('button');
-      printBtn.className = "print-btn";
-      printBtn.innerText = "Tisk kalendáře";
-      printBtn.onclick = () => printKalendar(wrap);
-      let removeBtn = document.createElement('button');
-      removeBtn.className = "remove-btn";
-      removeBtn.innerText = "Odebrat";
-      removeBtn.onclick = () => { wrap.remove(); saveToCache(); };
-      toolbar.appendChild(ms);
-      toolbar.appendChild(calTitle);
-      toolbar.appendChild(pdfBtn);
-      toolbar.appendChild(printBtn);
-      toolbar.appendChild(removeBtn);
-      wrap.appendChild(toolbar);
-      // Místo pro kalendář
-      let calendarArea = document.createElement('div');
-      calendarArea.className = "print-area";
-      wrap.appendChild(calendarArea);
-      // Legenda
-      wrap.appendChild(document.getElementById('legend-template').content.cloneNode(true));
-      // Vykreslit
-      kalendareDiv.appendChild(wrap);
-      renderKalendar(wrap, parsed, year, month);
+      ms.onchange = function() {
+        let [yy, mm] = ms.value.split('-');
+        let cache = localStorage.getItem("kalendarCache");
+        if (cache) {
+          let data = JSON.parse(cache);
+          renderKalendar(data.parsed, parseInt(yy), parseInt(mm));
+          saveToCache(data.parsed, parseInt(yy), parseInt(mm));
+        }
+      }
     }
 
-    // Samotné vykreslení kalendáře
-    function renderKalendar(wrap, parsed, year, month) {
-      let calendarArea = wrap.querySelector('.print-area');
+    // Vykreslení jednoho kalendáře
+    function renderKalendar(parsed, year, month) {
+      document.getElementById('kalendarWrap').style.display = "";
+      fillMonthSelect(year, month);
+      document.getElementById('calendarTitle').innerText = `${mesice[month-1]} ${year.toString().slice(-2)}`;
+      let calendarArea = document.getElementById('calendarContainer');
       calendarArea.innerHTML = "";
       // CZ dny
       const dnyTydne = ['Po','Út','St','Čt','Pá','So','Ne'];
       // Kolik dní má měsíc
       let days = new Date(year, month, 0).getDate();
-      // Načíst absenci pro daný měsíc
+      // Absence pro daný měsíc
       let data = {};
       for(let i=1; i<=days; i++) data[i] = [];
-      // Vyber správné dny z parsed (je-li předáno)
       if (parsed && parsed.data) {
-        // Mapování: v parsed je data[i]=[{jmeno, typ}], pro dny 1 až N
         for(let i=1;i<=days;i++) {
           if(parsed.data[i]) data[i] = parsed.data[i];
         }
       }
-      // Týden začíná v pondělí
+      // Skupina a abecední řazení
+      function sortAbs(a, b) {
+        const oA = a.typ.order || 99;
+        const oB = b.typ.order || 99;
+        if (oA !== oB) return oA - oB;
+        return a.jmeno.localeCompare(b.jmeno, 'cs');
+      }
+      // Mřížka
       let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
       let calendarHtml = `<div class="calendar">`;
       dnyTydne.forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
@@ -215,8 +174,7 @@
         calendarHtml += `<div class="cell"><div class="day-num">${den}</div>`;
         if(data[den] && data[den].length) {
           calendarHtml += `<div class="names-list">`;
-          data[den].forEach(abs => {
-            // OŘEZAT příznak, necháme jen jméno
+          data[den].sort(sortAbs).forEach(abs => {
             calendarHtml += `<div class="${abs.typ.cls}">${(abs.jmeno || "").replace(/ *[|\/-].*$/,"").trim()}</div>`;
           });
           calendarHtml += `</div>`;
@@ -227,21 +185,19 @@
       while(cell%7!==0){calendarHtml+=`<div class="cell"></div>`; cell++;}
       calendarHtml += `</div>`;
       calendarArea.innerHTML = calendarHtml;
-      // Aktualizace titulku
-      let calTitle = wrap.querySelector('.calendar-title');
-      calTitle.innerText = `${mesice[month-1]} ${year.toString().slice(-2)}`;
     }
 
     // Tisk pouze kalendáře
-    function printKalendar(wrap) {
+    function printKalendar() {
       window.print();
     }
 
     // PDF export (převod kalendáře na obrázek a vložení do PDF)
-    function exportPDF(wrap, calTitle) {
+    function exportPDF() {
       import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js').then(html2canvas => {
         html2canvas = html2canvas.default;
-        let area = wrap.querySelector('.print-area');
+        let area = document.querySelector('.print-area');
+        let calTitle = document.getElementById('calendarTitle').innerText;
         html2canvas(area).then(canvas => {
           let imgData = canvas.toDataURL('image/png');
           const pdf = new window.jspdf.jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
