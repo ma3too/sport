@@ -18,7 +18,7 @@
     }
     .day-header { text-align: center; font-weight: bold; font-size: 18px; color: #2A64AD; margin-bottom: 5px;}
     .cell { 
-      min-height: 120px; /* pevná výška buňky */
+      min-height: 120px; 
       max-height: 120px; 
       height: 120px;
       background: white; 
@@ -76,4 +76,68 @@
       if (code && code !== 'SME' && code !== '-') return { label: code, cls: 'abs-ostatni', name: 'Ostatní' };
       return null;
     }
-    document.getElementById('cs
+    document.getElementById('csvInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const text = evt.target.result;
+        renderCalendar(text);
+      };
+      reader.readAsText(file, 'windows-1250');
+    });
+    function renderCalendar(csv) {
+      let delimiter = ';';
+      if (csv.split(';').length < csv.split(',').length) delimiter = ',';
+      let lines = csv.split(/\r?\n/).filter(r => r.trim() !== '');
+      // === Najdeme řádek s hlavní hlavičkou ("Zaměstnanec", "1", "2", ...)
+      let headerIdx = lines.findIndex(r => r.split(delimiter).some(cell => cell.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('zamestnanec')));
+      if (headerIdx < 0) { alert('Chyba: nenašel jsem sloupec \"Zaměstnanec\".'); return; }
+      let header = lines[headerIdx].split(delimiter);
+      let jmenoIdx = header.findIndex(h => h.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('zamestnanec'));
+      if (jmenoIdx === -1) { alert('Chyba: nenašel jsem sloupec se jmény.'); return; }
+      // Najdi všechny indexy sloupců s číslem dne
+      let denSloupce = [];
+      header.forEach((h, i) => { if (/^\d+$/.test(h.trim())) denSloupce.push(i); });
+      // Data až od dalšího řádku pod skutečnou hlavičkou
+      let zamRows = lines.slice(headerIdx+1);
+      let data = {};
+      denSloupce.forEach((_, i) => { data[i+1] = []; });
+      zamRows.forEach(row => {
+        const cols = row.split(delimiter);
+        const jmeno = (cols[jmenoIdx] || '').trim();
+        if (!jmeno) return;
+        denSloupce.forEach((colIdx, i) => {
+          let typ = (cols[colIdx] || '').trim().toUpperCase();
+          if (!typ || typ === 'SME' || typ === '-') return;
+          let absType = getAbsenceType(typ);
+          if (absType) data[i+1].push({ jmeno, typ: absType });
+        });
+      });
+      let dnyVMesici = denSloupce.length;
+      let now = new Date();
+      let month = now.getMonth()+1, year = now.getFullYear();
+      let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
+      let calendarHtml = `<div class="calendar">`;
+      ['Po','Út','St','Čt','Pá','So','Ne'].forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
+      let cell = 0;
+      for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell"></div>`; cell++;}
+      for(let den=1; den<=dnyVMesici; den++) {
+        calendarHtml += `<div class="cell"><div class="day-num">${den}</div>`;
+        if(data[den].length) {
+          calendarHtml += `<div class="names-list">`;
+          data[den].forEach(abs => {
+            calendarHtml += `<div class="${abs.typ.cls}">${abs.jmeno} <span style="font-size:11px;">${abs.typ.label}</span></div>`;
+          });
+          calendarHtml += `</div>`;
+        }
+        calendarHtml += `</div>`;
+        cell++;
+      }
+      while(cell%7!==0){calendarHtml+=`<div class="cell"></div>`; cell++;}
+      calendarHtml += `</div>`;
+      document.getElementById('calendarContainer').innerHTML = calendarHtml;
+    }
+  </script>
+</body>
+</html>
