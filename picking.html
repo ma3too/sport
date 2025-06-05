@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Picking</title>
-  <!-- Google font pro stejný vzhled jako docházka -->
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -280,6 +279,7 @@
       </div>
       <button id="calc-btn" onclick="calculate()">Spočítat</button>
       <button id="export-btn" onclick="exportData()">Export</button>
+      <button id="clear-btn" style="background:#ccc;color:#222;" onclick="clearAll()">Smazat vše</button>
     </div>
 
     <div class="summary">
@@ -402,6 +402,60 @@
       link.click();
       document.body.removeChild(link);
     }
+
+    // ====== CACHE (localStorage) Ukládání a načítání ======
+    function saveToStorage() {
+      const data = {
+        workers: document.getElementById('total-workers').value,
+        norm: document.getElementById('norm').value,
+        zones: {}
+      };
+      zones.forEach(zone => {
+        data.zones[zone] = document.getElementById(`zone-${zone}`).value;
+      });
+      localStorage.setItem('rozdeleni_picking', JSON.stringify(data));
+    }
+
+    function loadFromStorage() {
+      const data = localStorage.getItem('rozdeleni_picking');
+      if (!data) return;
+      try {
+        const obj = JSON.parse(data);
+        if (obj.workers) document.getElementById('total-workers').value = obj.workers;
+        if (obj.norm) document.getElementById('norm').value = obj.norm;
+        if (obj.zones) {
+          zones.forEach(zone => {
+            if (obj.zones[zone] !== undefined) {
+              document.getElementById(`zone-${zone}`).value = obj.zones[zone];
+            }
+          });
+        }
+      } catch {}
+    }
+
+    // ====== SMAZAT VŠE ======
+    function clearAll() {
+      if (!confirm("Opravdu chceš smazat všechny hodnoty?")) return;
+      document.getElementById('total-workers').value = '';
+      document.getElementById('norm').value = '79';
+      zones.forEach(zone => {
+        document.getElementById(`zone-${zone}`).value = '';
+        document.getElementById(`res-${zone}`).textContent = '–';
+      });
+      document.getElementById('total-items').textContent = '–';
+      document.getElementById('time-required').textContent = '–';
+      localStorage.removeItem('rozdeleni_picking');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      loadFromStorage();
+      calculate(); // Pro okamžité zobrazení sumáře po reloadu
+      document.getElementById('total-workers').addEventListener('input', saveToStorage);
+      document.getElementById('norm').addEventListener('input', saveToStorage);
+      zones.forEach(zone => {
+        document.getElementById(`zone-${zone}`).addEventListener('input', saveToStorage);
+      });
+    });
   </script>
 </body>
 </html>
