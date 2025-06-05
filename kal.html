@@ -8,10 +8,30 @@
     h1 { text-align: center; color: #2A64AD; margin-top: 24px;}
     .center { max-width: 1200px; margin: 0 auto; padding: 30px 20px;}
     .upload-block {text-align: center; margin-bottom: 30px;}
-    .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; background: #e6edfa; border-radius: 16px; padding: 20px;}
+    .calendar { 
+      display: grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap: 8px; 
+      background: #e6edfa; 
+      border-radius: 16px; 
+      padding: 20px;
+    }
     .day-header { text-align: center; font-weight: bold; font-size: 18px; color: #2A64AD; margin-bottom: 5px;}
-    .cell { min-height: 85px; background: white; border-radius: 10px; box-shadow: 0 0 6px #c3cbe1; padding: 6px 6px 3px 9px; position: relative; }
-    .cell .day-num { font-size: 18px; font-weight: bold; color: #444; }
+    .cell { 
+      min-height: 120px; /* pevná výška buňky */
+      max-height: 120px; 
+      height: 120px;
+      background: white; 
+      border-radius: 10px; 
+      box-shadow: 0 0 6px #c3cbe1; 
+      padding: 6px 6px 3px 9px; 
+      position: relative; 
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .cell .day-num { font-size: 18px; font-weight: bold; color: #444; margin-bottom: 4px;}
     .legend { margin: 32px 0 0 0; display: flex; gap: 35px; justify-content: center;}
     .legend-item { display: flex; align-items: center; gap: 7px; font-size: 15px;}
     .abs-dov { background: #DB4B3E; color: white; padding: 0 5px; border-radius: 6px; }
@@ -41,104 +61,19 @@
     </div>
   </div>
   <script>
-    // Pomocné barvy pro typy absencí
     const absenceTypes = {
       'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená' },
       '1/2 DOV': { label: '1/2 DOV', cls: 'abs-pul', name: 'Půlden dovolené' },
       'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská' },
       'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař' }
     };
-    // Libovolné ostatní absence
     function getAbsenceType(code) {
       code = (code || '').toUpperCase().replace(/\s+/g, '');
       if (code === 'DOV') return absenceTypes['DOV'];
       if (code === '1/2DOV' || code === '1/2 DOV' || code === 'PULDOV') return absenceTypes['1/2 DOV'];
       if (code === 'NEM') return absenceTypes['NEM'];
       if (code === 'LEK') return absenceTypes['LEK'];
-      if (code) return { label: code, cls: 'abs-ostatni', name: 'Ostatní' };
+      if (code && code !== 'SME' && code !== '-') return { label: code, cls: 'abs-ostatni', name: 'Ostatní' };
       return null;
     }
-
-    document.getElementById('csvInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const text = evt.target.result;
-        renderCalendar(text);
-      };
-      reader.readAsText(file, 'windows-1250');
-    });
-
-    function renderCalendar(csv) {
-      // Detekce oddělovače (středník nebo čárka)
-      let delimiter = ';';
-      if (csv.split(';').length < csv.split(',').length) delimiter = ',';
-
-      // Parsování CSV na řádky
-      let lines = csv.split(/\r?\n/).filter(r => r.trim() !== '');
-      // Najdi řádek se jmény sloupců
-      let headerIdx = lines.findIndex(r => r.toLowerCase().includes('zaměstnanec'));
-      if (headerIdx < 0) { alert('Chyba: nenašel jsem sloupec "Zaměstnanec".'); return; }
-
-      // Vytáhni sloupce s čísly dnů (v řádku jsou: 1;2;3;4;... s dírami na "čas" atd.)
-      let header = lines[headerIdx].split(delimiter);
-      // Najdi všechny indexy sloupců s číslem dne (1–31)
-      let denSloupce = [];
-      header.forEach((h, i) => { if (/^\d+$/.test(h.trim())) denSloupce.push(i); });
-
-      // Uživatelé od headerIdx+1 dál
-      let zamRows = lines.slice(headerIdx+1);
-      let zamJmena = [];
-      let data = {}; // {den: [ {jmeno, typ} ]}
-      denSloupce.forEach((_, i) => { data[i+1] = []; });
-
-      zamRows.forEach(row => {
-        const cols = row.split(delimiter);
-        const jmeno = (cols[header.indexOf('Zaměstnanec') || 2] || '').trim();
-        if (!jmeno) return;
-        zamJmena.push(jmeno);
-        denSloupce.forEach((colIdx, i) => {
-          let typ = (cols[colIdx] || '').trim().toUpperCase();
-          let absType = getAbsenceType(typ);
-          if (absType) data[i+1].push({ jmeno, typ: absType });
-        });
-      });
-
-      // Najdeme měsíc (zkusíme první číslo v hlavičce)
-      let dnyVMesici = denSloupce.length;
-      let firstDate = new Date();
-      let firstDay = 1;
-      // Rozpoznání měsíce – z exportu nebo dnes
-      let now = new Date();
-      let month = now.getMonth()+1, year = now.getFullYear();
-      // Zkusíme najít měsíc z pole s nástupy (podle exportu lze doprogramovat)
-
-      // Klasická mřížka měsíc
-      let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7; // 0=pondělí
-      let calendarHtml = `<div class="calendar">`;
-      // Hlavička dní
-      ['Po','Út','St','Čt','Pá','So','Ne'].forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
-      let cell = 0;
-      // Prázdná pole před 1. dnem
-      for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell"></div>`; cell++;}
-      for(let den=1; den<=dnyVMesici; den++) {
-        calendarHtml += `<div class="cell"><div class="day-num">${den}</div>`;
-        if(data[den].length) {
-          calendarHtml += `<div class="names-list">`;
-          data[den].forEach(abs => {
-            calendarHtml += `<div class="${abs.typ.cls}">${abs.jmeno} <span style="font-size:11px;">${abs.typ.label}</span></div>`;
-          });
-          calendarHtml += `</div>`;
-        }
-        calendarHtml += `</div>`;
-        cell++;
-      }
-      // Prázdná pole do konce týdne
-      while(cell%7!==0){calendarHtml+=`<div class="cell"></div>`; cell++;}
-      calendarHtml += `</div>`;
-      document.getElementById('calendarContainer').innerHTML = calendarHtml;
-    }
-  </script>
-</body>
-</html>
+    document.getElementById('cs
