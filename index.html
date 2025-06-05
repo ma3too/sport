@@ -57,6 +57,20 @@
       background-color: #DB4B3E;
       color: white;
     }
+
+    .doluright {
+      position: fixed;
+      right: 24px;
+      bottom: 14px;
+      color: #fff;
+      opacity: 0.9;
+      font-size: 15px;
+      z-index: 999;
+      text-align: right;
+      font-style: italic;
+      letter-spacing: 0.03em;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -65,7 +79,7 @@
     <img src="static/logo.png" alt="Sportisimo Logo" class="logo">
     <div class="info-box">
       <div id="datumcas"></div>
-      <i>Vytvořil Martin Štancl</i>
+      <!-- <i>Vytvořil Martin Štancl</i> -->
     </div>
   </header>
 
@@ -77,8 +91,9 @@
     <a href="barcode.html">Barcode</a>
     <a href="zony.html">Zóny</a>
     <a href="kal.html">Kalendář</a>
-        
   </div>
+
+  <div class="doluright">Vytvořil Martin Štancl</div>
 
   <script>
     function aktualizujDatumCas() {
