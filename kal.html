@@ -18,6 +18,13 @@
     .legend { display: flex; gap: 35px; flex-wrap: wrap;}
     .legend-item { display: flex; align-items: center; gap: 7px; font-size: 15px; color: #444;}
     .legend-logo { height: 42px; margin-left: 40px; margin-right: 8px; opacity: 0.88; }
+    .aktualizovano {
+      flex: 1;
+      text-align: center;
+      font-size: 14px;
+      color: #444;
+      opacity: 0.7;
+    }
     .abs-dov { background: #42B63A; color: white; padding: 0 5px; border-radius: 0px; }
     .abs-pul { background: #b3e8b2; color: #2A2A2A; padding: 0 5px; border-radius: 0px;}
     .abs-nem { background: #DB4B3E; color: white; padding: 0 5px; border-radius: 0px;}
@@ -40,6 +47,7 @@
       .calendar-toolbar, .upload-block, h1 {display:none !important;}
       .print-title {display: block !important;}
       .legend-logo { display: inline-block !important; }
+      .aktualizovano { color: #222 !important; }
     }
     .legend-logo { display: none; } /* Na webu skryté */
   </style>
@@ -66,6 +74,7 @@
             <div class="legend-item"><span class="abs-lek">LEK</span> Lékař</div>
             <div class="legend-item"><span class="abs-ostatni">OST</span> Ostatní absence</div>
           </div>
+          <div class="aktualizovano" id="aktualizovano"></div>
           <img src="static/logo.png" class="legend-logo" alt="Logo">
         </div>
       </div>
@@ -99,6 +108,7 @@
         let data = JSON.parse(cache);
         renderKalendar(data.parsed, data.year, data.month);
       }
+      nastavDatumAktualizace();
     });
 
     document.getElementById('csvInput').addEventListener('change', function(e) {
@@ -112,6 +122,7 @@
         let m = today.getMonth()+1, y = today.getFullYear();
         renderKalendar(parsed, y, m);
         saveToCache(parsed, y, m);
+        nastavDatumAktualizace();
       };
       reader.readAsText(file, 'windows-1250');
     });
@@ -137,6 +148,7 @@
           renderKalendar(data.parsed, parseInt(yy), parseInt(mm));
           saveToCache(data.parsed, parseInt(yy), parseInt(mm));
         }
+        nastavDatumAktualizace();
       }
     }
 
@@ -213,6 +225,14 @@
         });
       });
       return {data};
+    }
+
+    function nastavDatumAktualizace() {
+      const d = new Date();
+      const day = d.getDate().toString().padStart(2,'0');
+      const month = (d.getMonth()+1).toString().padStart(2,'0');
+      const year = d.getFullYear();
+      document.getElementById("aktualizovano").textContent = `Aktualizováno dne: ${day}.${month}.${year}`;
     }
   </script>
 </body>
