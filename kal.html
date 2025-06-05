@@ -2,10 +2,10 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Měsíční kalendář absencí</title>
+  <title>Kalendář</title>
   <style>
-    body { background: #F5F6FA; font-family: 'Open Sans', sans-serif; color: #2A2A2A; margin: 0; padding: 0;}
-    h1 { text-align: center; color: #2A64AD; margin-top: 24px;}
+    body { background: #2A64AD; font-family: 'Open Sans', sans-serif; color: #FFFFFF; margin: 0; padding: 0;}
+    h1 { text-align: center; color: #FFFFFF; margin-top: 24px;}
     .center { max-width: 1200px; margin: 0 auto; padding: 30px 20px;}
     .upload-block {text-align: center; margin-bottom: 30px;}
     .kalendar-wrap { background: #e6edfa; border-radius: 6px; box-shadow: 0 0 14px #c3cbe1; padding: 20px 26px 24px 26px; margin-bottom: 28px;}
@@ -23,7 +23,6 @@
     .abs-ostatni { background: #9B59B6; color: white; padding: 0 5px; border-radius: 0;}
     .calendar-toolbar { display: flex; justify-content: flex-start; align-items: center; margin-bottom: 12px;}
     .month-select {font-size: 16px; border-radius: 4px; border:1px solid #aac2e4; padding:4px 9px;}
-    .calendar-title {font-size: 23px; font-weight: bold; color: #2A64AD; margin-left: 22px; text-align:left;}
     .pdf-btn, .print-btn { background:#2A64AD; color:white; border:none; border-radius:4px; font-size:15px; padding:7px 14px; margin-left: 12px; cursor:pointer;}
     .print-btn {background: #4DA86E;}
     .pdf-btn:hover, .print-btn:hover { filter:brightness(1.13);}
@@ -44,12 +43,11 @@
     <div class="upload-block">
       <input type="file" id="csvInput" accept=".csv" />
       <br><br>
-      <span style="color:#888;">Nahraj CSV export a udělej si přehled... Data zůstanou uložena v prohlížeči do přehrání dalším seznamem.</span>
+      <span style="color:#d1ebff;">Nahraj CSV export z KS a udělej si přehled...</span>
     </div>
     <div class="kalendar-wrap" id="kalendarWrap" style="display:none;">
       <div class="calendar-toolbar">
         <select class="month-select" id="monthSelect"></select>
-        <span class="calendar-title" id="calendarTitle"></span>
         <button class="pdf-btn" onclick="exportPDF()">Export PDF</button>
         <button class="print-btn" onclick="printKalendar()">Tisk kalendáře</button>
       </div>
@@ -58,7 +56,7 @@
         <div id="calendarContainer"></div>
         <div class="legend" id="legendBlock">
           <div class="legend-item"><span class="abs-dov">DOV</span> Dovolená</div>
-          <div class="legend-item"><span class="abs-pul">D/2</span> 1/2 dovolené</div>
+          <div class="legend-item"><span class="abs-pul">D/2</span> Dovolená 1/2</div>
           <div class="legend-item"><span class="abs-nem">NEM</span> Nemocenská</div>
           <div class="legend-item"><span class="abs-lek">LEK</span> Lékař</div>
           <div class="legend-item"><span class="abs-ostatni">OST</span> Ostatní absence</div>
@@ -68,7 +66,6 @@
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // Barvy a zkratky
     const absenceTypes = {
       'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská', order: 1 },
       'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 2 },
@@ -84,15 +81,12 @@
       if (code && code !== 'SME' && code !== '-') return { label: code, cls: 'abs-ostatni', name: 'Ostatní', order: 5 };
       return null;
     }
-    // CZ měsíce
     const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
 
-    // Uložení do cache
     function saveToCache(parsed, year, month) {
       let cache = {parsed, year, month};
       localStorage.setItem("kalendarCache", JSON.stringify(cache));
     }
-    // Načtení z cache po načtení stránky
     window.addEventListener('DOMContentLoaded', () => {
       let cache = localStorage.getItem("kalendarCache");
       if (cache) {
@@ -101,7 +95,6 @@
       }
     });
 
-    // CSV import a inicializace
     document.getElementById('csvInput').addEventListener('change', function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -109,7 +102,6 @@
       reader.onload = function(evt) {
         const text = evt.target.result;
         let parsed = parseCSV(text);
-        // Default měsíc/rok (dnes)
         let today = new Date();
         let m = today.getMonth()+1, y = today.getFullYear();
         renderKalendar(parsed, y, m);
@@ -118,7 +110,6 @@
       reader.readAsText(file, 'windows-1250');
     });
 
-    // Měsíční výběr
     function fillMonthSelect(year, month) {
       let ms = document.getElementById('monthSelect');
       ms.innerHTML = '';
@@ -143,20 +134,15 @@
       }
     }
 
-    // Vykreslení jednoho kalendáře
     function renderKalendar(parsed, year, month) {
       document.getElementById('kalendarWrap').style.display = "";
       fillMonthSelect(year, month);
       let title = `${mesice[month-1]} ${year.toString().slice(-2)}`;
-      document.getElementById('calendarTitle').innerText = title;
       document.getElementById('printTitle').innerText = title;
       let calendarArea = document.getElementById('calendarContainer');
       calendarArea.innerHTML = "";
-      // CZ dny
       const dnyTydne = ['Po','Út','St','Čt','Pá','So','Ne'];
-      // Kolik dní má měsíc
       let days = new Date(year, month, 0).getDate();
-      // Absence pro daný měsíc
       let data = {};
       for(let i=1; i<=days; i++) data[i] = [];
       if (parsed && parsed.data) {
@@ -164,14 +150,12 @@
           if(parsed.data[i]) data[i] = parsed.data[i];
         }
       }
-      // Skupina a abecední řazení
       function sortAbs(a, b) {
         const oA = a.typ.order || 99;
         const oB = b.typ.order || 99;
         if (oA !== oB) return oA - oB;
         return a.jmeno.localeCompare(b.jmeno, 'cs');
       }
-      // Mřížka
       let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
       let calendarHtml = `<div class="calendar">`;
       dnyTydne.forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
@@ -194,12 +178,10 @@
       calendarArea.innerHTML = calendarHtml;
     }
 
-    // Tisk pouze kalendáře
     function printKalendar() {
       window.print();
     }
 
-    // PDF export (převod kalendáře na obrázek a vložení do PDF)
     function exportPDF() {
       import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js').then(html2canvas => {
         html2canvas = html2canvas.default;
@@ -217,7 +199,6 @@
       });
     }
 
-    // CSV parsing (najde správnou hlavičku)
     function parseCSV(csv) {
       let delimiter = ';';
       if (csv.split(';').length < csv.split(',').length) delimiter = ',';
