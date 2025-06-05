@@ -14,8 +14,10 @@
     .cell { min-height: 120px; background: white; color: #444; border-radius: 10px; border: 2px solid #0066b3; padding: 6px 6px 3px 9px; position: relative; overflow-y: auto; display: flex; flex-direction: column; justify-content: flex-start; }
     .cell .day-num { font-size: 18px; font-weight: bold; color: #444; margin-bottom: 4px;}
     .names-list {margin: 4px 0 0 0; font-size: 12px;}
-    .legend { margin: 32px 0 0 0; display: flex; gap: 35px; justify-content: flex-start;}
+    .legend-row { margin: 32px 0 0 0; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+    .legend { display: flex; gap: 35px; flex-wrap: wrap;}
     .legend-item { display: flex; align-items: center; gap: 7px; font-size: 15px; color: #444;}
+    .legend-logo { height: 42px; margin-left: 40px; margin-right: 8px; opacity: 0.88; }
     .abs-dov { background: #42B63A; color: white; padding: 0 5px; border-radius: 0px; }
     .abs-pul { background: #b3e8b2; color: #2A2A2A; padding: 0 5px; border-radius: 0px;}
     .abs-nem { background: #DB4B3E; color: white; padding: 0 5px; border-radius: 0px;}
@@ -26,7 +28,6 @@
     .print-btn {background: #4DA86E; color:white; border:none; border-radius:4px; font-size:15px; padding:7px 14px; margin-left: 12px; cursor:pointer;}
     .print-btn:hover { filter:brightness(1.13);}
     .print-title {font-size: 23px; font-weight: bold; color: #0066b3; margin-bottom: 14px; text-align:left;}
-    .print-logo { display: none; }
     @media (max-width:900px) {.calendar {font-size:12px; grid-template-columns: repeat(7, 1fr);}}
     @media print {
       body, html { background: #fff !important; }
@@ -38,15 +39,9 @@
       }
       .calendar-toolbar, .upload-block, h1 {display:none !important;}
       .print-title {display: block !important;}
-      .print-logo {
-        display: block !important;
-        position: absolute;
-        right: 35px;
-        bottom: 22px;
-        width: 110px;
-        opacity: 0.8;
-      }
+      .legend-logo { display: inline-block !important; }
     }
+    .legend-logo { display: none; } /* Na webu skryté */
   </style>
 </head>
 <body>
@@ -63,14 +58,16 @@
       <div class="print-area" id="printArea">
         <div class="print-title" id="printTitle" style="display:block;"></div>
         <div id="calendarContainer"></div>
-        <div class="legend" id="legendBlock">
-          <div class="legend-item"><span class="abs-dov">DOV</span> Dovolená</div>
-          <div class="legend-item"><span class="abs-pul">D/2</span> Dovolená 1/2</div>
-          <div class="legend-item"><span class="abs-nem">NEM</span> Nemocenská</div>
-          <div class="legend-item"><span class="abs-lek">LEK</span> Lékař</div>
-          <div class="legend-item"><span class="abs-ostatni">OST</span> Ostatní absence</div>
+        <div class="legend-row">
+          <div class="legend" id="legendBlock">
+            <div class="legend-item"><span class="abs-dov">DOV</span> Dovolená</div>
+            <div class="legend-item"><span class="abs-pul">D/2</span> Dovolená 1/2</div>
+            <div class="legend-item"><span class="abs-nem">NEM</span> Nemocenská</div>
+            <div class="legend-item"><span class="abs-lek">LEK</span> Lékař</div>
+            <div class="legend-item"><span class="abs-ostatni">OST</span> Ostatní absence</div>
+          </div>
+          <img src="static/logo.png" class="legend-logo" alt="Logo">
         </div>
-        <img src="static/logo.png" class="print-logo" alt="Logo">
       </div>
     </div>
   </div>
