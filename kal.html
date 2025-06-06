@@ -58,6 +58,11 @@
       .aktualizovano { color: #222 !important; }
     }
     .legend-logo { display: none; }
+
+    /* --- Jemně modré podbarvení sobot a nepracovních nedělí --- */
+    .cell.saturday, .cell.sunday {
+      background: #e6f2ff !important;
+    }
   </style>
 </head>
 <body>
@@ -124,8 +129,6 @@
     function saveCustomEvents(year, month, events) {
       localStorage.setItem(getCustomEventsKey(year, month), JSON.stringify(events));
     }
-    // Pomocná funkce pro vymazání událostí pokud budeš chtít
-    // function clearCustomEvents(year, month) { localStorage.removeItem(getCustomEventsKey(year, month)); }
 
     // Inicializace pole pro události
     let currentYear = null, currentMonth = null, currentDays = 31;
@@ -171,7 +174,6 @@
     // Uložení naposledy parsovaných dat (kvůli re-renderu)
     let lastParsed = null;
 
-    // Ostatní původní funkce
     function saveToCache(parsed, year, month) {
       let cache = {parsed, year, month};
       localStorage.setItem("kalendarCache", JSON.stringify(cache));
@@ -274,7 +276,18 @@
       let cell = 0;
       for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell"></div>`; cell++;}
       for(let den=1; den<=days; den++) {
-        calendarHtml += `<div class="cell"><div class="day-num">${den}</div>`;
+        // Zjisti den v týdnu: 0 = pondělí, ..., 6 = neděle
+        let dayOfWeek = (weekStart + den - 1) % 7;
+        let cellClass = "";
+        if(dayOfWeek === 5) cellClass = " saturday";
+        if(dayOfWeek === 6) cellClass = " sunday";
+        // Neděle, která má vlastní událost s "Pracovní" není volná
+        let isWorkingSunday = false;
+        if(dayOfWeek === 6 && customEvents[den]) {
+          isWorkingSunday = customEvents[den].some(e => e.toLowerCase().includes('pracovní'));
+        }
+        if(dayOfWeek === 6 && isWorkingSunday) cellClass = ""; // pracovní neděle nemá podbarvení
+        calendarHtml += `<div class="cell${cellClass}"><div class="day-num">${den}</div>`;
         if(data[den] && data[den].length) {
           calendarHtml += `<div class="names-list">`;
           data[den].sort(sortAbs).forEach(abs => {
