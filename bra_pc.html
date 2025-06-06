@@ -5,7 +5,20 @@
   <title>WaitBRA (PC verze)</title>
   <style>
     body { background: #0066b3; color: white; font-family: 'Open Sans', sans-serif; padding: 30px; }
-    h1 { margin-top: 0; }
+    .header-flex {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .logo-header {
+      max-height: 54px;
+      max-width: 150px;
+      height: auto;
+      width: auto;
+      margin-left: 22px;
+    }
+    h1 { margin: 0; }
     .panel { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
     .uploader label { font-weight: normal; }
     .input-row {
@@ -44,7 +57,6 @@
       color: #222;
       border-radius: 10px;
       overflow: hidden;
-      /* důležité pro zaoblené rohy na celou tabulku */
     }
     th, td {
       border: 1px solid #ccc;
@@ -138,6 +150,13 @@
       background: #ff3232;
     }
     @media (max-width: 700px) {
+      .header-flex { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .logo-header {
+        margin-left: 0;
+        margin-top: 10px;
+        max-height: 38px;
+        max-width: 90px;
+      }
       .panel { flex-direction: column; align-items: flex-start; gap: 8px;}
       .input-row { flex-direction: column; gap: 8px; width: 100%; }
       #barcodeInput { width: 100%; }
@@ -148,7 +167,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <h1>WaitBRA</h1>
+  <div class="header-flex">
+    <h1>WaitBRA</h1>
+    <img src="static/logo.png" alt="Logo" class="logo-header">
+  </div>
   <div class="panel">
     <div class="uploader">
       <label>Nahrát CSV seznam 👉 <input type="file" id="csvFile" accept=".csv"></label>
@@ -365,7 +387,7 @@
         if (input && input.style.display !== "none") input.value = "";
       }
     });
-  document.getElementById('backBtn').onclick = () => history.back();
+    document.getElementById('backBtn').onclick = () => history.back();
   </script>
 </body>
 </html>
