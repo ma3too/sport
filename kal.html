@@ -58,10 +58,8 @@
       .aktualizovano { color: #222 !important; }
     }
     .legend-logo { display: none; }
-
-    /* --- Jemně modré podbarvení sobot a volných nedělí --- */
     .cell.saturday, .cell.sunday {
-      background: #bcbcbc !important;
+      background: #e6f2ff !important;
     }
   </style>
 </head>
@@ -108,7 +106,6 @@
       'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená', order: 2 },
       'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené', order: 3 },
       'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 4 }
-      // Ostatní bude až za tímto blokem
     };
 
     function getAbsenceType(typ) {
@@ -131,7 +128,6 @@
       localStorage.setItem(getCustomEventsKey(year, month), JSON.stringify(events));
     }
 
-    // Inicializace pole pro události
     let currentYear = null, currentMonth = null, currentDays = 31;
     let customEvents = {};
 
@@ -154,7 +150,6 @@
       }
     }
 
-    // Funkce pro přidání události
     function addCustomEvent(day, text) {
       if (!customEvents[day]) customEvents[day] = [];
       customEvents[day].push(text);
@@ -162,7 +157,6 @@
       renderKalendar(lastParsed, currentYear, currentMonth);
     }
 
-    // Zpracování vlastního formuláře pro události
     document.getElementById('eventForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const day = document.getElementById('eventDay').value;
@@ -172,7 +166,6 @@
       document.getElementById('eventText').value = "";
     });
 
-    // Uložení naposledy parsovaných dat (kvůli re-renderu)
     let lastParsed = null;
 
     function saveToCache(parsed, year, month) {
@@ -258,27 +251,17 @@
       calendarArea.innerHTML = "";
       const dnyTydne = ['Po','Út','St','Čt','Pá','So','Ne'];
       let days = new Date(year, month, 0).getDate();
-      let data = {};
-      for(let i=1; i<=days; i++) data[i] = [];
-      if (parsed && parsed.data) {
-        for(let i=1;i<=days;i++) {
-          if(parsed.data[i]) data[i] = parsed.data[i];
-        }
-      }
-      // Custom pořadí absencí: NEM, DOV, D/2, LEK, ostatní
-      function sortAbs(a, b) {
-        const oA = a.typ.order || 999;
-        const oB = b.typ.order || 999;
-        if (oA !== oB) return oA - oB;
-        return a.jmeno.localeCompare(b.jmeno, 'cs');
-      }
-      let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
+
+      // Hlavičky dnů týdne
       let calendarHtml = `<div class="calendar">`;
       dnyTydne.forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
-      let cell = 0;
-      for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell"></div>`; cell++;}
+
+      let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
+      let cell = weekStart;
+      // Prázdné buňky už negenerujeme, přeskočíme na správný den v týdnu
+
       for(let den=1; den<=days; den++) {
-        // 0 = pondělí, ..., 6 = neděle
+        // Den v týdnu: 0 = pondělí, ..., 6 = neděle
         let dayOfWeek = (weekStart + den - 1) % 7;
         let cellClass = "";
         if(dayOfWeek === 5) cellClass = " saturday";
@@ -294,10 +277,15 @@
           });
         }
 
-        // Pak absence, setříděné podle požadovaného pořadí
-        if(data[den] && data[den].length) {
+        // Pak absence, setříděné podle pořadí
+        if(parsed && parsed.data && parsed.data[den] && parsed.data[den].length) {
           calendarHtml += `<div class="names-list">`;
-          data[den].sort(sortAbs).forEach(abs => {
+          parsed.data[den].sort(function(a, b) {
+            const oA = a.typ.order || 999;
+            const oB = b.typ.order || 999;
+            if (oA !== oB) return oA - oB;
+            return a.jmeno.localeCompare(b.jmeno, 'cs');
+          }).forEach(abs => {
             calendarHtml += `<div class="${abs.typ.cls}">${(abs.jmeno || "").replace(/ *[|\/-].*$/,"").trim()}</div>`;
           });
           calendarHtml += `</div>`;
@@ -305,7 +293,6 @@
         calendarHtml += `</div>`;
         cell++;
       }
-      while(cell%7!==0){calendarHtml+=`<div class="cell"></div>`; cell++;}
       calendarHtml += `</div>`;
       calendarArea.innerHTML = calendarHtml;
     }
