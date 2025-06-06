@@ -61,6 +61,12 @@
     .cell.saturday, .cell.sunday {
       background: #e6f2ff !important;
     }
+    .cell.empty {
+      background: #e6f2ff !important;
+      border-style: dashed;
+      opacity: 0.45;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -117,7 +123,6 @@
     }
     const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
 
-    // Vlastní události pro každý měsíc a rok (uchováme v localStorage)
     function getCustomEventsKey(year, month) {
       return `customEvents_${year}_${month}`;
     }
@@ -252,32 +257,27 @@
       const dnyTydne = ['Po','Út','St','Čt','Pá','So','Ne'];
       let days = new Date(year, month, 0).getDate();
 
-      // Hlavičky dnů týdne
       let calendarHtml = `<div class="calendar">`;
       dnyTydne.forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
 
       let weekStart = (new Date(year, month-1, 1).getDay() + 6) % 7;
       let cell = weekStart;
-      // Prázdné buňky už negenerujeme, přeskočíme na správný den v týdnu
+
+      for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell empty"></div>`; cell++; }
 
       for(let den=1; den<=days; den++) {
-        // Den v týdnu: 0 = pondělí, ..., 6 = neděle
         let dayOfWeek = (weekStart + den - 1) % 7;
         let cellClass = "";
         if(dayOfWeek === 5) cellClass = " saturday";
         if(dayOfWeek === 6) cellClass = " sunday";
-        // Neděle, kde je jakákoli vlastní událost, nemá podbarvení
         if(dayOfWeek === 6 && customEvents[den] && customEvents[den].length > 0) cellClass = "";
         calendarHtml += `<div class="cell${cellClass}"><div class="day-num">${den}</div>`;
 
-        // Vždy nejdříve manuálně přidané události
         if(customEvents[den] && customEvents[den].length) {
           customEvents[den].forEach(eventText => {
             calendarHtml += `<div class="custom-event">${eventText.replace(/</g,"&lt;")}</div>`;
           });
         }
-
-        // Pak absence, setříděné podle pořadí
         if(parsed && parsed.data && parsed.data[den] && parsed.data[den].length) {
           calendarHtml += `<div class="names-list">`;
           parsed.data[den].sort(function(a, b) {
