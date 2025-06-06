@@ -59,7 +59,7 @@
     }
     .legend-logo { display: none; }
 
-    /* --- Jemně modré podbarvení sobot a nepracovních nedělí --- */
+    /* --- Jemně modré podbarvení sobot a volných nedělí --- */
     .cell.saturday, .cell.sunday {
       background: #e6f2ff !important;
     }
@@ -105,16 +105,17 @@
   <script>
     const absenceTypes = {
       'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská', order: 1 },
-      'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 2 },
-      'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená', order: 3 },
-      'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené', order: 4 }
+      'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená', order: 2 },
+      'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené', order: 3 },
+      'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 4 }
+      // Ostatní bude až za tímto blokem
     };
-    
+
     function getAbsenceType(typ) {
       if (absenceTypes[typ]) return absenceTypes[typ];
       if (typ === 'PUL' || typ === 'D2' || typ === 'D.2') return absenceTypes['D/2'];
       if (['OST', 'ABS', 'MAT', 'OČR'].includes(typ)) 
-        return { label: typ, cls: 'abs-ostatni', name: 'Ostatní absence', order: 10 };
+        return { label: typ, cls: 'abs-ostatni', name: 'Ostatní absence', order: 99 };
       return null;
     }
     const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
@@ -264,9 +265,10 @@
           if(parsed.data[i]) data[i] = parsed.data[i];
         }
       }
+      // Custom pořadí absencí: NEM, DOV, D/2, LEK, ostatní
       function sortAbs(a, b) {
-        const oA = a.typ.order || 99;
-        const oB = b.typ.order || 99;
+        const oA = a.typ.order || 999;
+        const oB = b.typ.order || 999;
         if (oA !== oB) return oA - oB;
         return a.jmeno.localeCompare(b.jmeno, 'cs');
       }
@@ -276,30 +278,29 @@
       let cell = 0;
       for(let i=0;i<weekStart;i++){ calendarHtml += `<div class="cell"></div>`; cell++;}
       for(let den=1; den<=days; den++) {
-        // Zjisti den v týdnu: 0 = pondělí, ..., 6 = neděle
+        // 0 = pondělí, ..., 6 = neděle
         let dayOfWeek = (weekStart + den - 1) % 7;
         let cellClass = "";
         if(dayOfWeek === 5) cellClass = " saturday";
         if(dayOfWeek === 6) cellClass = " sunday";
-        // Neděle, která má vlastní událost s "Pracovní" není volná
-        let isWorkingSunday = false;
-        if(dayOfWeek === 6 && customEvents[den]) {
-          isWorkingSunday = customEvents[den].some(e => e.toLowerCase().includes('pracovní'));
-        }
-        if(dayOfWeek === 6 && isWorkingSunday) cellClass = ""; // pracovní neděle nemá podbarvení
+        // Neděle, kde je jakákoli vlastní událost, nemá podbarvení
+        if(dayOfWeek === 6 && customEvents[den] && customEvents[den].length > 0) cellClass = "";
         calendarHtml += `<div class="cell${cellClass}"><div class="day-num">${den}</div>`;
+
+        // Vždy nejdříve manuálně přidané události
+        if(customEvents[den] && customEvents[den].length) {
+          customEvents[den].forEach(eventText => {
+            calendarHtml += `<div class="custom-event">${eventText.replace(/</g,"&lt;")}</div>`;
+          });
+        }
+
+        // Pak absence, setříděné podle požadovaného pořadí
         if(data[den] && data[den].length) {
           calendarHtml += `<div class="names-list">`;
           data[den].sort(sortAbs).forEach(abs => {
             calendarHtml += `<div class="${abs.typ.cls}">${(abs.jmeno || "").replace(/ *[|\/-].*$/,"").trim()}</div>`;
           });
           calendarHtml += `</div>`;
-        }
-        // vlastní události
-        if(customEvents[den] && customEvents[den].length) {
-          customEvents[den].forEach(eventText => {
-            calendarHtml += `<div class="custom-event">${eventText.replace(/</g,"&lt;")}</div>`;
-          });
         }
         calendarHtml += `</div>`;
         cell++;
