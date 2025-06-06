@@ -127,6 +127,9 @@
       align-items: center;
       gap: 16px;
       animation: showModal .18s;
+      /* ---- ZELENÝ SILNÝ RÁMEČEK ---- */
+      border: 7px solid #21b93e;
+      box-shadow: 0 4px 40px #1ee25066;
     }
     @keyframes showModal { from {transform: scale(0.9); opacity:0;} to {transform: scale(1); opacity:1;} }
     #modalBox .zone {
@@ -168,10 +171,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 <body>
-  <audio id="notifSound" preload="auto">
-    <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_115b9f1e84.mp3" type="audio/mp3">
-    <!-- krátký "ding" zvuk z pixabay, royalty free -->
-  </audio>
   <div class="header-flex">
     <h1>WaitBRA</h1>
     <img src="static/logo.png" alt="Logo" class="logo-header">
@@ -208,6 +207,10 @@
     let codes = [];
     let scanned = new Set();
     const STORAGE_KEY = "waitbra-pc-v1";
+
+    // ---- ZVUK - vytváříme přes JS (funguje všude, nemá autoplay bug) ----
+    const foundSound = new Audio("https://cdn.pixabay.com/audio/2022/03/15/audio_115b9f1e84.mp3");
+    foundSound.preload = "auto";
 
     window.addEventListener('DOMContentLoaded', function() {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -311,10 +314,10 @@
       document.getElementById('modalOverlay').style.display = 'flex';
       // ---- Pozadí celé stránky na zeleno ----
       document.body.classList.add('found');
-      // ---- Zvuk ----
+      // ---- Zvuk - vytvořeno přes JS ----
       try {
-        document.getElementById('notifSound').currentTime = 0;
-        document.getElementById('notifSound').play();
+        foundSound.currentTime = 0;
+        foundSound.play();
       } catch (e) {}
       setTimeout(() => {
         document.getElementById('modalClose').focus();
@@ -323,7 +326,6 @@
 
     function hideModal() {
       document.getElementById('modalOverlay').style.display = 'none';
-      // ---- Vrátit zpět původní pozadí ----
       document.body.classList.remove('found');
       showBarcodeInput();
     }
@@ -338,7 +340,6 @@
       }
     });
 
-    // Hlavní část pro "skenování" z čtečky
     document.getElementById('barcodeInput').addEventListener('change', onInputScan);
     document.getElementById('barcodeInput').addEventListener('input', function(e) {
       if (e.target.value.includes('\n') || e.target.value.includes('\r')) onInputScan(e);
