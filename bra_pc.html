@@ -60,6 +60,21 @@
     #stats { margin: 20px 0 18px 0; font-size: 18px; font-weight: bold; }
     .statlabel { color: #ff3232; font-size: 18px; font-weight: bold; }
     .statnum { color: #fff; font-size: 22px; font-weight: bold; }
+    #backBtn {
+      background: #0066b3;
+      color: #fff;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-right: 8px;
+      transition: background 0.18s;
+    }
+    #backBtn:hover {
+      background: #00477b;
+    }
     #exportBtn {
       background: #ffd700;
       color: #0066b3;
@@ -138,6 +153,7 @@
     <div class="uploader">
       <label>Nahrát CSV seznam 👉 <input type="file" id="csvFile" accept=".csv"></label>
       <div class="input-row">
+        <button id="backBtn" type="button">Zpět</button>
         <button id="exportBtn" style="display:none;">Exportovat nenalezené krabice</button>
         <input id="barcodeInput" type="text" placeholder="Pípni kód…" autocomplete="off" style="display:none;" />
       </div>
@@ -349,6 +365,7 @@
         if (input && input.style.display !== "none") input.value = "";
       }
     });
+  document.getElementById('backBtn').onclick = () => history.back();
   </script>
 </body>
 </html>
