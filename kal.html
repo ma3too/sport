@@ -52,7 +52,7 @@
         position: absolute; left: 0; top: 0; width: 100vw; background: white !important; 
         min-height: 99vh;
       }
-      .calendar-toolbar, .upload-block, .event-form, h1 {display:none !important;}
+      .calendar-toolbar, .upload-block, .event-form, h1, .absence-filter {display:none !important;}
       .print-title {display: block !important;}
       .legend-logo { display: inline-block !important; }
       .aktualizovano { color: #222 !important; }
@@ -67,6 +67,28 @@
       opacity: 0.45;
       pointer-events: none;
     }
+    /* Filtr */
+    .absence-filter {
+      display: flex;
+      gap: 20px;
+      background: #c7e5ff;
+      padding: 12px 24px 7px 18px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+      font-size: 16px;
+      color: #004466;
+      user-select: none;
+      flex-wrap: wrap;
+    }
+    .absence-filter label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 16px;
+    }
+    .absence-filter input[type="checkbox"] {
+      accent-color: #0066b3;
+      width: 17px; height: 17px;
+    }
   </style>
 </head>
 <body>
@@ -75,6 +97,15 @@
     <div class="upload-block">
       <span style="color:#d1ebff;">Nahraj CSV export z KS a udělej si přehled...</span><input type="file" id="csvInput" accept=".csv" />
     </div>
+    <!-- Absence typy filtr -->
+    <form class="absence-filter" id="absenceFilter" onchange="filterAbsenceChange()">
+      <span><b>Zobrazit absence:</b></span>
+      <label><input type="checkbox" name="abs" value="DOV" checked>DOV</label>
+      <label><input type="checkbox" name="abs" value="D/2" checked>D/2</label>
+      <label><input type="checkbox" name="abs" value="NEM" checked>NEM</label>
+      <label><input type="checkbox" name="abs" value="LEK" checked>LEK</label>
+      <label><input type="checkbox" name="abs" value="OST" checked>OST</label>
+    </form>
     <form class="event-form" id="eventForm" autocomplete="off" onsubmit="return false;">
       <label>Den:
         <select id="eventDay"></select>
@@ -107,31 +138,38 @@
     </div>
   </div>
   <script>
+    // Typy absencí
     const absenceTypes = {
       'NEM':  { label: 'NEM',   cls: 'abs-nem', name: 'Nemocenská', order: 1 },
       'DOV':  { label: 'DOV',   cls: 'abs-dov', name: 'Dovolená', order: 2 },
       'D/2':  { label: 'D/2',   cls: 'abs-pul', name: 'Půlden dovolené', order: 3 },
       'LEK':  { label: 'LEK',   cls: 'abs-lek', name: 'Lékař', order: 4 }
     };
-
+    // Klíčové pro "ostatní"
+    const ostKeys = ['OST', 'ABS', 'MAT', 'OČR'];
     function getAbsenceType(typ) {
       if (absenceTypes[typ]) return absenceTypes[typ];
       if (typ === 'PUL' || typ === 'D2' || typ === 'D.2') return absenceTypes['D/2'];
-      if (['OST', 'ABS', 'MAT', 'OČR'].includes(typ)) 
+      if (ostKeys.includes(typ)) 
         return { label: typ, cls: 'abs-ostatni', name: 'Ostatní absence', order: 99 };
       return null;
     }
-    const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
+    // Filtr absence
+    function getAbsenceFilter() {
+      let checks = document.querySelectorAll('input[name="abs"]:checked');
+      let out = [];
+      checks.forEach(c => {
+        if (c.value === 'OST') out = out.concat(ostKeys);
+        else out.push(c.value);
+      });
+      return out;
+    }
 
-    function getCustomEventsKey(year, month) {
-      return `customEvents_${year}_${month}`;
-    }
-    function loadCustomEvents(year, month) {
-      return JSON.parse(localStorage.getItem(getCustomEventsKey(year, month)) || '{}');
-    }
-    function saveCustomEvents(year, month, events) {
-      localStorage.setItem(getCustomEventsKey(year, month), JSON.stringify(events));
-    }
+    // Ostatní původní kód
+    const mesice = ["LEDEN","ÚNOR","BŘEZEN","DUBEN","KVĚTEN","ČERVEN","ČERVENEC","SRPEN","ZÁŘÍ","ŘÍJEN","LISTOPAD","PROSINEC"];
+    function getCustomEventsKey(year, month) { return `customEvents_${year}_${month}`; }
+    function loadCustomEvents(year, month) { return JSON.parse(localStorage.getItem(getCustomEventsKey(year, month)) || '{}'); }
+    function saveCustomEvents(year, month, events) { localStorage.setItem(getCustomEventsKey(year, month), JSON.stringify(events)); }
 
     let currentYear = null, currentMonth = null, currentDays = 31;
     let customEvents = {};
@@ -172,7 +210,6 @@
     });
 
     let lastParsed = null;
-
     function saveToCache(parsed, year, month) {
       let cache = {parsed, year, month};
       localStorage.setItem("kalendarCache", JSON.stringify(cache));
@@ -241,6 +278,7 @@
       }
     }
 
+    // HLAVNÍ úprava - filtruje absence podle checkboxu!
     function renderKalendar(parsed, year, month) {
       currentYear = year;
       currentMonth = month;
@@ -256,6 +294,9 @@
       calendarArea.innerHTML = "";
       const dnyTydne = ['Po','Út','St','Čt','Pá','So','Ne'];
       let days = new Date(year, month, 0).getDate();
+
+      // Získám aktuální filtr:
+      let filter = getAbsenceFilter();
 
       let calendarHtml = `<div class="calendar">`;
       dnyTydne.forEach(d=>{calendarHtml+=`<div class="day-header">${d}</div>`;});
@@ -273,28 +314,39 @@
         if(dayOfWeek === 6 && customEvents[den] && customEvents[den].length > 0) cellClass = "";
         calendarHtml += `<div class="cell${cellClass}"><div class="day-num">${den}</div>`;
 
+        // Manuální události - VŽDY viditelné
         if(customEvents[den] && customEvents[den].length) {
           customEvents[den].forEach(eventText => {
             calendarHtml += `<div class="custom-event">${eventText.replace(/</g,"&lt;")}</div>`;
           });
         }
+
+        // Absenční - pouze filtrem povolené!
         if(parsed && parsed.data && parsed.data[den] && parsed.data[den].length) {
-          calendarHtml += `<div class="names-list">`;
-          parsed.data[den].sort(function(a, b) {
-            const oA = a.typ.order || 999;
-            const oB = b.typ.order || 999;
-            if (oA !== oB) return oA - oB;
-            return a.jmeno.localeCompare(b.jmeno, 'cs');
-          }).forEach(abs => {
-            calendarHtml += `<div class="${abs.typ.cls}">${(abs.jmeno || "").replace(/ *[|\/-].*$/,"").trim()}</div>`;
-          });
-          calendarHtml += `</div>`;
+          let filteredAbs = parsed.data[den].filter(abs => filter.includes(abs.typ.label) || (ostKeys.includes(abs.typ.label) && filter.includes('OST')));
+          if(filteredAbs.length) {
+            calendarHtml += `<div class="names-list">`;
+            filteredAbs.sort(function(a, b) {
+              const oA = a.typ.order || 999;
+              const oB = b.typ.order || 999;
+              if (oA !== oB) return oA - oB;
+              return a.jmeno.localeCompare(b.jmeno, 'cs');
+            }).forEach(abs => {
+              calendarHtml += `<div class="${abs.typ.cls}">${(abs.jmeno || "").replace(/ *[|\/-].*$/,"").trim()}</div>`;
+            });
+            calendarHtml += `</div>`;
+          }
         }
         calendarHtml += `</div>`;
         cell++;
       }
       calendarHtml += `</div>`;
       calendarArea.innerHTML = calendarHtml;
+    }
+
+    // Když změním filtr, překresli kalendář
+    function filterAbsenceChange() {
+      if (lastParsed) renderKalendar(lastParsed, currentYear, currentMonth);
     }
 
     function printKalendar() {
